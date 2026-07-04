@@ -263,6 +263,29 @@ RegisterCommand('outfitunstuck', function()
 end, false)
 
 -- ============================================================
+-- Lua-seitiger ESC/Backspace-Handler (unabhängig vom NUI-fetch)
+-- ============================================================
+-- IsRawKeyReleased liest die physische Tastatur direkt aus – auch dann,
+-- wenn NUI den Fokus hat und der JS->Lua fetch (RegisterNUICallback) aus
+-- irgendeinem Grund nicht ankommt. Damit lässt sich das Menü IMMER schließen.
+-- VK-Code 27 = ESC. (Backspace bewusst NICHT, sonst schließt Löschen in
+-- Textfeldern das Panel.)
+CreateThread(function()
+    while true do
+        if nuiFocusActive then
+            Wait(0)
+
+            if IsRawKeyReleased and IsRawKeyReleased(27) then
+                Debug('Raw ESC erkannt -> schließe Menü', 'INPUT')
+                CloseAllNui()
+            end
+        else
+            Wait(200)
+        end
+    end
+end)
+
+-- ============================================================
 -- Debug-Befehle
 -- ============================================================
 local function DumpStatus()
