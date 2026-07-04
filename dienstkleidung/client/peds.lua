@@ -4,6 +4,8 @@
 
 JobOutfit.Peds = {}
 
+local pedBlips = {}
+
 local function DrawText3D(coords, text)
     SetDrawOrigin(coords.x, coords.y, coords.z + 1.0, 0)
     SetTextScale(0.35, 0.35)
@@ -127,10 +129,71 @@ local function SpawnSinglePed(jobName, pedData)
         entity = ped,
         job = jobName,
         label = pedData.label or '[E] Outfit-Menü öffnen',
-        targetName = targetName
+        targetName = targetName,
+        coords = { x = x, y = y, z = z }
     })
 
     JobOutfit.Debug('Ped gespawnt für Job: ' .. tostring(jobName), 'PED')
+end
+
+local function ClearPedBlips()
+    for _, blip in ipairs(pedBlips) do
+        if blip and DoesBlipExist(blip) then
+            RemoveBlip(blip)
+        end
+    end
+    pedBlips = {}
+end
+
+local function RefreshPedBlips()
+    ClearPedBlips()
+
+    local pedSettings = Config.PedSettings or {}
+    if not pedSettings.showBlip or type(Config.JobPeds) ~= 'table' then return end
+
+    for jobName, pedData in pairs(Config.JobPeds) do
+        if type(pedData) == 'table' and pedData.enabled ~= false and Config.AllowedJobs[jobName] ~= false then
+            local c = pedData.coords
+            local x, y, z = tonumber(c and c.x), tonumber(c and c.y), tonumber(c and c.z)
+            if x and y and z then
+                local blip = AddBlipForCoord(x, y, z)
+                SetBlipSprite(blip, 73)
+                SetBlipDisplay(blip, 4)
+                SetBlipScale(blip, 0.75)
+                SetBlipColour(blip, 47)
+                SetBlipAsShortRange(blip, true)
+                BeginTextCommandSetBlipName('STRING')
+                AddTextComponentSubstringPlayerName(pedData.label or (capitalize(jobName) .. ' Outfit'))
+                EndTextCommandSetBlipName(blip)
+                pedBlips[#pedBlips + 1] = blip
+            end
+        end
+    end
+end
+
+local function capitalize(str)
+    str = tostring(str or '')
+    if str == '' then return '' end
+    return str:sub(1, 1):upper() .. str:sub(2)
+end
+
+local function ShouldShowPedMarker(jobName, pedData)
+    if type(pedData) ~= 'table' or pedData.enabled == false then return false end
+    if Config.AllowedJobs and Config.AllowedJobs[jobName] == false then return false end
+    local c = pedData.coords
+    return tonumber(c and c.x) and tonumber(c and c.y) and tonumber(c and c.z)
+end
+
+local function DrawPedMarker(coords)
+    DrawMarker(
+        2,
+        coords.x, coords.y, coords.z + 0.25,
+        0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0,
+        0.32, 0.32, 0.32,
+        255, 90, 60, 185,
+        false, false, 2, true, nil, nil, false
+    )
 end
 
 function JobOutfit.Peds.DeleteAll()
@@ -150,6 +213,7 @@ function JobOutfit.Peds.DeleteAll()
     end
 
     JobOutfit.State.spawnedPeds = {}
+    ClearPedBlips()
 end
 
 function JobOutfit.Peds.SpawnAll()
@@ -171,6 +235,7 @@ function JobOutfit.Peds.SpawnAll()
     end
 
     s.pedsSpawned = true
+    RefreshPedBlips()
 end
 
 -- Key-Interaktion (Alternative zu ox_target): zeigt 3D-Text und öffnet das
@@ -233,6 +298,36 @@ CreateThread(function()
 
                 Wait(sleep)
             end
+        end
+    end
+end)
+
+-- Marker an konfigurierten Ped-Positionen (auch wenn der NPC gerade nicht gespawnt ist).
+CreateThread(function()
+    while true do
+        local pedSettings = Config.PedSettings or {}
+        if not pedSettings.showMarker or type(Config.JobPeds) ~= 'table' then
+            Wait(1000)
+        else
+            local sleep = 1000
+            local playerPed = PlayerPedId()
+            local playerCoords = GetEntityCoords(playerPed)
+            local drawDistance = tonumber(pedSettings.markerDrawDistance) or 30.0
+
+            for jobName, pedData in pairs(Config.JobPeds) do
+                if ShouldShowPedMarker(jobName, pedData) then
+                    local c = pedData.coords
+                    local coords = vector3(tonumber(c.x), tonumber(c.y), tonumber(c.z))
+                    local distance = #(playerCoords - coords)
+
+                    if distance <= drawDistance then
+                        sleep = 0
+                        DrawPedMarker(coords)
+                    end
+                end
+            end
+
+            Wait(sleep)
         end
     end
 end)

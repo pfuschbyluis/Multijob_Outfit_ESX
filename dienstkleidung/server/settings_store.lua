@@ -102,7 +102,10 @@ function NS.SanitizePedSettings(v, fallback)
     return {
         freeze = NS.SanitizeBool(v.freeze, fallback and fallback.freeze),
         invincible = NS.SanitizeBool(v.invincible, fallback and fallback.invincible),
-        blockEvents = NS.SanitizeBool(v.blockEvents, fallback and fallback.blockEvents)
+        blockEvents = NS.SanitizeBool(v.blockEvents, fallback and fallback.blockEvents),
+        showMarker = NS.SanitizeBool(v.showMarker, fallback and fallback.showMarker),
+        showBlip = NS.SanitizeBool(v.showBlip, fallback and fallback.showBlip),
+        markerDrawDistance = NS.SanitizeNumber(v.markerDrawDistance, fallback and fallback.markerDrawDistance)
     }
 end
 

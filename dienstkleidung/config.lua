@@ -43,7 +43,10 @@ Config.RestoreClothesLabel = 'Normale Kleidung anziehen'
 Config.PedSettings = {
     freeze = true,
     invincible = true,
-    blockEvents = true
+    blockEvents = true,
+    showMarker = false,
+    showBlip = false,
+    markerDrawDistance = 30.0
 }
 
 Config.KeyInteract = {

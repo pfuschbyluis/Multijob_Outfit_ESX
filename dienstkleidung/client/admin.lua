@@ -31,6 +31,7 @@ local function ApplyClientSettings(settings)
     if type(settings) ~= 'table' then return end
 
     local pedsChanged = settings.JobPeds ~= nil or settings.PedSettings ~= nil
+        or settings.AllowedJobs ~= nil
         or (settings.Interaction ~= nil and settings.Interaction ~= Config.Interaction)
 
     for _, field in ipairs(ADMIN_SYNC_FIELDS) do
@@ -63,10 +64,13 @@ RegisterNetEvent('job_outfit:admin:denied', function()
 end)
 
 RegisterNetEvent('job_outfit:admin:saved', function()
+    JobOutfit.CloseAdminPanel()
+    SendNUIMessage({ action = 'adminSaved' })
     JobOutfit.Notify('Einstellungen gespeichert.', 'success')
 end)
 
 RegisterNetEvent('job_outfit:admin:saveError', function(reason)
+    SendNUIMessage({ action = 'adminSaveError', reason = reason or 'unbekannter Fehler' })
     JobOutfit.Notify('Speichern fehlgeschlagen: ' .. tostring(reason or 'unbekannter Fehler'), 'error')
 end)
 
@@ -105,7 +109,6 @@ end)
 
 RegisterNUICallback('admin:save', function(data, cb)
     JobOutfit.Debug('NUI-Callback: admin:save', 'NUI')
-    JobOutfit.CloseAdminPanel()
     TriggerServerEvent('job_outfit:admin:save', data)
     cb('ok')
 end)

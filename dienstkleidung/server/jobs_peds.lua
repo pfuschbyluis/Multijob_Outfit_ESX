@@ -9,8 +9,8 @@ function NS.SanitizeAllowedJobs(v, fallback)
     local out = {}
     local any = false
     for k, val in pairs(v) do
-        if NS.IsSafeJobKey(k) and type(val) == 'boolean' then
-            out[k] = val
+        if NS.IsSafeJobKey(k) then
+            out[k] = NS.SanitizeBool(val, false)
             any = true
         end
     end

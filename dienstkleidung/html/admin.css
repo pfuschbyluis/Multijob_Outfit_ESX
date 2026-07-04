@@ -21,8 +21,8 @@
 }
 
 .admin__panel {
-    width: min(1080px, 100%);
-    height: min(720px, 100%);
+    width: min(1360px, 96vw);
+    height: min(900px, 92vh);
     display: flex;
     flex-direction: column;
     background: var(--bg-panel);
@@ -81,7 +81,7 @@
 
 /* ─── Sidebar ────────────────────────────────────────────── */
 .admin__sidebar {
-    width: 220px;
+    width: 248px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -143,7 +143,7 @@
 .admin__body {
     flex: 1;
     overflow-y: auto;
-    padding: 22px 26px 28px;
+    padding: 24px 30px 32px;
     min-width: 0;
 }
 
@@ -668,6 +668,39 @@
     font-size: 14px;
     font-weight: 700;
     color: var(--text);
+}
+
+.ped-card__title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.ped-job-warn {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #f2b233;
+    background: rgba(242, 178, 51, 0.12);
+    border: 1px solid rgba(242, 178, 51, 0.28);
+    border-radius: 999px;
+    padding: 3px 8px;
+    white-space: nowrap;
+}
+
+.save-error-banner {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(240, 85, 106, 0.1);
+    border: 1px solid rgba(240, 85, 106, 0.28);
+    color: #f0556a;
+    font-size: 13px;
+    line-height: 1.45;
 }
 
 .ped-card__coords {

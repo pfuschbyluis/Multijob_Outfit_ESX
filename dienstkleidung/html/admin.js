@@ -146,19 +146,32 @@
         return !!(ped && ped.enabled !== false);
     }
 
-    function pedToggleControl(key, ped) {
+    function isJobAllowed(s, key) {
+        return !!(s && s.AllowedJobs && s.AllowedJobs[key]);
+    }
+
+    function enableJobForPed(key) {
+        if (!state || !key) return;
+        state.AllowedJobs = state.AllowedJobs || {};
+        state.AllowedJobs[key] = true;
+    }
+
+    function pedToggleControl(key, ped, s) {
         const safeKey = escapeAttr(key);
         const enabled = isPedEnabled(ped);
+        const jobAllowed = isJobAllowed(s, key);
         const btnLabel = enabled ? 'Deaktivieren' : 'Aktivieren';
         const statusLabel = enabled ? 'Aktiv' : 'Inaktiv';
         const statusClass = enabled ? 'is-active' : 'is-inactive';
         const btnClass = enabled ? 'btn--deactivate' : 'btn--activate';
         const hint = enabled
-            ? 'Der NPC wird nach dem Speichern nicht mehr gespawnt. Spieler können das Outfit-Menü nicht mehr über ihn öffnen.'
-            : 'Der NPC wird nach dem Speichern an den konfigurierten Koordinaten gespawnt und öffnet das Outfit-Menü für berechtigte Spieler.';
+            ? (jobAllowed
+                ? 'Der NPC wird nach dem Speichern an den Koordinaten gespawnt. Marker/Blip zeigen die Position in der Welt.'
+                : 'Achtung: Der Job ist unter „Jobs“ deaktiviert – der Ped spawnt erst, wenn der Job erlaubt ist.')
+            : 'Aktiviert den NPC und den zugehörigen Job. Nach dem Speichern erscheint der Ped an den Koordinaten.';
         const title = enabled
             ? 'Ped deaktivieren – der NPC erscheint nicht mehr in der Welt'
-            : 'Ped aktivieren – der NPC wird an den eingetragenen Koordinaten gespawnt';
+            : 'Ped aktivieren – aktiviert auch den Job und spawnt den NPC nach dem Speichern';
 
         return `
         <div class="ped-toggle">
@@ -166,6 +179,7 @@
                 <span class="ped-status ${statusClass}">${statusLabel}</span>
                 <button type="button" class="btn btn--sm ${btnClass}" data-toggle-ped="${safeKey}" title="${escapeAttr(title)}">${btnLabel}</button>
             </div>
+            ${enabled && !jobAllowed ? '<span class="ped-job-warn">Job ist deaktiviert – wird beim Aktivieren automatisch erlaubt</span>' : ''}
             <p class="ped-toggle__hint">${escapeAttr(hint)}</p>
         </div>`;
     }
@@ -257,16 +271,19 @@
         </div>`);
     }
 
-    function pedCard(key, ped) {
+    function pedCard(key, ped, s) {
         const c = ped.coords || { x: 0, y: 0, z: 0, w: 0 };
         const safeKey = escapeAttr(key);
         const safeLabelKey = escapeAttr(capitalize(key));
         return `
         <div class="ped-card" data-ped-job="${safeKey}">
             <div class="ped-card__head">
-                <h3>${safeLabelKey}</h3>
+                <div class="ped-card__title-wrap">
+                    <h3>${safeLabelKey}</h3>
+                    ${isPedEnabled(ped) && !isJobAllowed(s, key) ? '<span class="ped-job-warn">Job deaktiviert</span>' : ''}
+                </div>
                 <div class="ped-card__actions">
-                    ${pedToggleControl(key, ped)}
+                    ${pedToggleControl(key, ped, s)}
                     <button type="button" class="btn btn--danger btn--sm" data-remove-ped="${safeKey}" title="Ped-Konfiguration für diesen Job vollständig entfernen">Entfernen</button>
                 </div>
             </div>
@@ -322,7 +339,7 @@
     function renderPeds(s) {
         const pedKeys = Object.keys(s.JobPeds || {});
         const pedsHtml = pedKeys.length
-            ? pedKeys.map(k => pedCard(k, s.JobPeds[k])).join('')
+            ? pedKeys.map(k => pedCard(k, s.JobPeds[k], s)).join('')
             : '<div class="empty-state">Noch keine Outfit-Peds konfiguriert.</div>';
 
         const availableForAdd = jobKeys.filter(k => !pedKeys.includes(k));
@@ -349,6 +366,18 @@
                 ${checkboxField('ped_freeze', 'PedSettings.freeze', 'Eingefroren', s.PedSettings.freeze)}
                 ${checkboxField('ped_invincible', 'PedSettings.invincible', 'Unverwundbar', s.PedSettings.invincible)}
                 ${checkboxField('ped_block', 'PedSettings.blockEvents', 'Reagiert nicht auf Umgebung', s.PedSettings.blockEvents)}
+            </div>
+        </div>
+        <div class="admin-section">
+            <div class="admin-section__title">Sichtbarkeit in der Welt</div>
+            <p class="help-text">Marker und Blips helfen beim Platzieren und Finden der Outfit-Peds – unabhängig von der Interaktionsart (Taste oder Target).</p>
+            <div class="admin-grid">
+                ${checkboxField('ped_marker', 'PedSettings.showMarker', 'Boden-Marker an Ped-Positionen', s.PedSettings.showMarker)}
+                ${checkboxField('ped_blip', 'PedSettings.showBlip', 'Karten-Blips für Outfit-Peds', s.PedSettings.showBlip)}
+                <div class="field">
+                    <label>Marker-Sichtweite (Meter)</label>
+                    <input type="number" min="5" step="1" data-path="PedSettings.markerDrawDistance" value="${s.PedSettings.markerDrawDistance ?? 30}">
+                </div>
             </div>
         </div>`);
     }
@@ -493,6 +522,14 @@
         };
 
         body.innerHTML = (renderers[activeTab] || renderGeneral)(state);
+
+        if (saveErrorMessage) {
+            const banner = document.createElement('div');
+            banner.id = 'adminSaveError';
+            banner.className = 'save-error-banner';
+            banner.textContent = saveErrorMessage;
+            body.prepend(banner);
+        }
     }
 
     /* ---------- Input handling (delegated, no full re-render for plain fields) ---------- */
@@ -591,7 +628,9 @@
         if (toggleBtn) {
             const key = toggleBtn.getAttribute('data-toggle-ped');
             if (key && state.JobPeds && state.JobPeds[key]) {
-                state.JobPeds[key].enabled = !isPedEnabled(state.JobPeds[key]);
+                const nextEnabled = !isPedEnabled(state.JobPeds[key]);
+                state.JobPeds[key].enabled = nextEnabled;
+                if (nextEnabled) enableJobForPed(key);
                 render();
             }
             return;
@@ -602,6 +641,7 @@
             const key = availableForAdd.includes(pendingAddPedJob) ? pendingAddPedJob : availableForAdd[0];
             if (!key) return;
 
+            enableJobForPed(key);
             state.JobPeds[key] = {
                 enabled: true,
                 model: '',
@@ -760,15 +800,37 @@
         render();
     });
 
+    let savePending = false;
+    let saveErrorMessage = '';
+
+    function setSaveUiState(pending, errorMessage) {
+        savePending = pending;
+        saveErrorMessage = errorMessage || '';
+        if (!saveBtn) return;
+        saveBtn.disabled = pending;
+        saveBtn.textContent = pending ? 'Speichern…' : 'Speichern';
+        const existing = document.getElementById('adminSaveError');
+        if (existing) existing.remove();
+        if (saveErrorMessage && body) {
+            const banner = document.createElement('div');
+            banner.id = 'adminSaveError';
+            banner.className = 'save-error-banner';
+            banner.textContent = saveErrorMessage;
+            body.prepend(banner);
+        }
+    }
+
     function closePanel() {
         dbg('closePanel()');
+        setSaveUiState(false, '');
         app.classList.add('hidden');
         post('admin:close');
     }
 
     function savePanel() {
+        if (savePending || !state) return;
         dbg('savePanel()');
-        app.classList.add('hidden');
+        setSaveUiState(true, '');
         post('admin:save', state);
     }
 
@@ -794,6 +856,19 @@
 
         if (data.action === 'closeAdmin') {
             app.classList.add('hidden');
+            setSaveUiState(false, '');
+            return;
+        }
+
+        if (data.action === 'adminSaved') {
+            setSaveUiState(false, '');
+            app.classList.add('hidden');
+            return;
+        }
+
+        if (data.action === 'adminSaveError') {
+            setSaveUiState(false, data.reason || 'Speichern fehlgeschlagen.');
+            app.classList.remove('hidden');
             return;
         }
 
@@ -817,7 +892,10 @@
         state = JSON.parse(JSON.stringify(data.settings || {}));
         state.AllowedJobs = state.AllowedJobs || {};
         state.JobPeds = state.JobPeds || {};
-        state.PedSettings = state.PedSettings || { freeze: true, invincible: true, blockEvents: true };
+        state.PedSettings = state.PedSettings || { freeze: true, invincible: true, blockEvents: true, showMarker: false, showBlip: false, markerDrawDistance: 30 };
+        if (state.PedSettings.showMarker === undefined) state.PedSettings.showMarker = false;
+        if (state.PedSettings.showBlip === undefined) state.PedSettings.showBlip = false;
+        if (state.PedSettings.markerDrawDistance === undefined) state.PedSettings.markerDrawDistance = 30;
         state.KeyInteract = state.KeyInteract || { distance: 2.5, drawDistance: 12.0, key: 38, onlyShowForAllowedJobs: true };
         state.Target = state.Target || { distance: 2.5, icon: 'fa-solid fa-shirt', label: 'Outfit-Menü öffnen' };
         state.NotifyPosition = state.NotifyPosition || 'top-right';
@@ -828,7 +906,11 @@
             ...Object.keys(state.JobPeds)
         ]);
         jobKeys = Array.from(keySet).sort();
-        jobKeys.forEach(k => { if (state.AllowedJobs[k] === undefined) state.AllowedJobs[k] = false; });
+        jobKeys.forEach(k => {
+            if (state.AllowedJobs[k] === undefined) {
+                state.AllowedJobs[k] = !!(state.JobPeds && state.JobPeds[k] && isPedEnabled(state.JobPeds[k]));
+            }
+        });
         configuredJobs = data.configuredJobs || {};
         pendingAddPedJob = null;
         outfitsUi = { selectedJob: jobKeys[0] || null, list: [], loading: false, editing: null };
