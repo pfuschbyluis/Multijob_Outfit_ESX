@@ -2,6 +2,15 @@
    Dienstkleidung – Admin-Panel Styles
    ============================================================ */
 
+/* FiveM/CEF zeichnet sonst nach dem Klick eine rote Focus-Umrandung um Buttons
+   und Eingabefelder. Global hart abschalten. */
+.admin *:focus,
+.admin *:focus-visible,
+.admin *:active {
+    outline: none !important;
+}
+.admin ::-moz-focus-inner { border: 0 !important; padding: 0 !important; }
+
 /* ─── Overlay & Panel ────────────────────────────────────── */
 .admin {
     position: fixed;

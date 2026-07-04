@@ -4,17 +4,27 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* FiveM/CEF zeichnet sonst nach dem Klick eine rote Focus-Umrandung um Buttons
+   und Eingabefelder. Global hart abschalten. */
+*:focus,
+*:focus-visible,
+*:active {
+    outline: none !important;
+}
+::-moz-focus-inner { border: 0 !important; padding: 0 !important; }
+
 button {
     font-family: inherit;
     -webkit-appearance: none;
     appearance: none;
-    outline: none;
+    outline: none !important;
     -webkit-tap-highlight-color: transparent;
 }
 
 button:focus,
-button:focus-visible {
-    outline: none;
+button:focus-visible,
+button:active {
+    outline: none !important;
     box-shadow: none;
 }
 
