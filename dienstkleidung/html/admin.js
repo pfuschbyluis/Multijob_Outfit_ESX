@@ -268,6 +268,7 @@
         return wrapTab(`
         <div class="admin-section">
             <div class="admin-section__title">Notify-Einstellungen</div>
+            <p class="help-text">Der Notify-Titel wird als Überschrift angezeigt, die eigentliche Meldung als Beschreibung darunter.</p>
             <div class="admin-grid">
                 <div class="field">
                     <label>Notify-System</label>

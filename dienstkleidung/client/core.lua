@@ -241,6 +241,7 @@ function JobOutfit.Notify(msg, typ, duration)
         SendNUIMessage({
             action = 'notify',
             type = typ,
+            title = Config.NotifyTitle or 'Outfit-Menü',
             message = msg,
             length = duration,
             position = Config.NotifyPosition or 'top-right'

@@ -267,9 +267,10 @@ function createNotification(data) {
     const notify = document.createElement('div');
     notify.className = `notify ${type}`;
     notify.style.setProperty('--duration', `${duration}ms`);
+    const titleHtml = data.title ? `<p class="title">${escapeHtml(data.title)}</p>` : '';
     notify.innerHTML = `
         <div class="icon-wrapper">${ICON[type] || ICON.info}</div>
-        <div class="content"><p class="text">${formatMessage(data.message)}</p></div>
+        <div class="content">${titleHtml}<p class="text">${formatMessage(data.message)}</p></div>
     `;
 
     root.appendChild(notify);
