@@ -1,0 +1,39 @@
+VMS Multichars Kompatibilität
+==============================
+
+VMS Clothestore wird von dieser Ressource nicht mehr verwendet. Kleidung läuft
+über Config.ClothingSystem = 'skinchanger' (esx_skin) oder 'native'.
+
+Wichtige Config-Werte in config.lua:
+
+Config.ClothingSystem = 'skinchanger'
+
+Config.VMSMultichars = {
+    Enabled = true,
+    Resource = 'vms_multichars',
+    CaptureAfterCharacterLoad = true,
+    CaptureDelay = 3500,
+    RespawnPedsAfterCharacterLoad = false,
+    ExtraLoadedEvents = {}
+}
+
+Was die Multichars-Anpassung macht:
+- Bei esx:playerLoaded wird die gespeicherte Zivilkleidung gelöscht und nach kurzer Verzögerung neu gespeichert.
+- Dadurch wird nach einem Charakterwechsel nicht versehentlich Kleidung vom vorherigen Charakter wiederhergestellt.
+- Offene Outfit-Menüs werden beim Charakterwechsel geschlossen.
+- Optional können Outfit-Peds nach Charakterwechsel neu gespawnt werden, falls dein Setup sie durch Routing Buckets verliert.
+- Die Doku von VMS Multichars nennt keinen offiziellen Outfit-Export; deshalb erfolgt die Integration über ESX playerLoaded und eine optionale ExtraLoadedEvents-Liste.
+
+Hinweise:
+- Bei ClothingSystem = 'native' werden die Job-Outfits direkt per GTA Native gesetzt
+  (temporär, wird nicht in esx_skin gespeichert).
+- Bei ClothingSystem = 'skinchanger' laufen Outfits über esx_skin/skinchanger.
+
+Server.cfg Empfehlung:
+ensure oxmysql
+ensure es_extended
+ensure ox_lib
+ensure vms_multichars
+ensure multijob_outfit
+
+Falls Config.Interaction = 'ox_target' gesetzt ist, muss ox_target ebenfalls vorher gestartet werden.

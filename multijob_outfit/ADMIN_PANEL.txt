@@ -1,0 +1,75 @@
+Admin-Panel – Einrichtung
+=========================
+
+Befehl im Spiel: /outfitadmin
+
+Berechtigung (ACE) in der server.cfg eintragen, z. B. für eine Admin-Gruppe:
+
+    add_ace group.admin job_outfit.admin allow
+    add_principal identifier.license:DEINE_LICENSE group.admin
+
+Oder direkt an eine einzelne Identität vergeben:
+
+    add_ace identifier.license:DEINE_LICENSE job_outfit.admin allow
+
+Benötigt außerdem oxmysql (Dependency in fxmanifest.lua). server.cfg-Reihenfolge:
+
+    ensure oxmysql
+    ensure es_extended
+    ensure ox_lib
+    ensure ox_target
+    ensure multijob_outfit
+
+
+Zwei getrennte Speicherorte
+---------------------------
+
+1) settings.json (im Ressourcenordner)
+   Nur noch für allgemeine/statische Einstellungen:
+   - Allgemein: Debug, Notify-System, Notify-Titel/-Dauer, Menü-Typ (custom/ox_lib),
+     Interaktionsart (key/ox_target), Kleidungssystem (skinchanger/native),
+     Zivilkleidung-wiederherstellen (an/aus + Label)
+   - Ped-Verhalten: freeze / invincible / blockEvents
+   - Tasten-Interaktion: Distanz, Sichtweite, Taste, nur für berechtigte Jobs anzeigen
+   - Target-Interaktion: Distanz, Icon, Label
+
+   Änderungen werden serverseitig in settings.json gespeichert, beim nächsten
+   Start automatisch geladen (überschreibt die Standardwerte aus config.lua,
+   ohne die Datei selbst zu verändern) und live an alle Clients gesendet.
+   /outfitadmin_reset setzt NUR diese Felder auf die config.lua-Werte zurück.
+
+2) MySQL-Datenbank (über oxmysql)
+   Jobs, Outfit-Peds UND Outfits (Kleidung) sind vollständig datenbankgestützt:
+   - Tabelle `multijob_outfit_jobs`    – welche Jobs das Menü nutzen dürfen
+   - Tabelle `multijob_outfit_peds`    – Model/Position/Szenario/Label pro Job
+   - Tabelle `multijob_outfit_outfits` – Kleidung pro Job + Rang (Grade-Nummer)
+
+   Die Tabellen werden beim ersten Start automatisch angelegt (CREATE TABLE
+   IF NOT EXISTS). install.sql liegt nur als Referenz bei, falls du sie lieber
+   vorab manuell per phpMyAdmin/HeidiSQL einspielen willst.
+
+   Erststart-Migration: Ist die Jobs-Tabelle beim Start komplett leer, werden
+   die alten, ehemals in config.lua hart hinterlegten Daten einmalig aus
+   db_seed.lua importiert. Danach ist ausschließlich die Datenbank die Quelle
+   der Wahrheit – db_seed.lua hat ab dann keinen Effekt mehr und kann
+   gefahrlos gelöscht werden. /outfitadmin_reset fasst die DB-Daten NICHT an
+   (zu riskant für echte, gepflegte Outfit-Daten).
+
+
+Was im Panel eingestellt werden kann
+-------------------------------------
+- Allgemein / Benachrichtigungen / Interaktion: siehe settings.json oben
+- Jobs: welche Jobs das Outfit-Menü nutzen dürfen (Tabelle multijob_outfit_jobs)
+- Outfit-Peds: Model, Position (per Klick auf "Aktuelle Position übernehmen"),
+  Szenario, Label, aktiviert/deaktiviert – pro Job, inkl. Hinzufügen/Entfernen
+  (Tabelle multijob_outfit_peds)
+- Outfits: komplette Kleidungs-Verwaltung pro Job + Rang – anlegen, bearbeiten,
+  löschen, direkt im Spiel per Drawable/Textur-Eingabefeldern pro Slot
+  (Maske, Oberteil, Hose, Schuhe, Accessoires, ...), inkl. Live-Vorschau
+  ("Vorschau anziehen" zieht das gerade bearbeitete Outfit testweise auf dem
+  eigenen Charakter an, ohne zu speichern) und "Männlich -> Weiblich kopieren"
+  als Zeitsparer für ähnliche Outfits (Tabelle multijob_outfit_outfits)
+
+Hinweis zum Rang-Feld im Outfits-Tab: die "Rang"-Nummer muss exakt dem
+ESX-Job-Grade des Spielers entsprechen (0, 1, 2, ...), sonst wird das Outfit
+diesem Rang nicht angezeigt.
