@@ -116,6 +116,7 @@ function escapeHtml(value) {
 }
 
 function closeMenu() {
+    hideMenu();
     post('close');
 }
 
@@ -172,6 +173,7 @@ function render(data) {
             extraClass: 'item--restore' + (disabled ? ' is-disabled' : ''),
             index: idx++,
             onClick: disabled ? null : () => {
+                hideMenu();
                 post('restoreClothes');
             }
         });
@@ -202,6 +204,7 @@ function render(data) {
             chevIcon: isActive ? '' : undefined,
             index: idx++,
             onClick: isActive ? null : () => {
+                hideMenu();
                 post('selectOutfit', { id: outfit.id });
             }
         }));
