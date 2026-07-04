@@ -14,16 +14,20 @@ const outfitList = document.getElementById('outfitList');
 const closeBtn   = document.getElementById('closeBtn');
 const root       = document.getElementById('root');
 
-const IN_FIVEM = window.location.hostname === 'nui-game-internal';
+// IN_FIVEM zuverlässig über GetParentResourceName erkennen. Die alte
+// hostname-Prüfung ('nui-game-internal') schlägt in neueren FiveM-Builds fehl
+// (Host ist dort 'cfx-nui-<resource>'), wodurch alle fetch()-Aufrufe im
+// Preview-Modus landeten und NIE bei Lua ankamen.
+const IN_FIVEM = (typeof GetParentResourceName === 'function');
 let resourceName = 'preview';
 if (IN_FIVEM) {
     try {
-        resourceName = (typeof GetParentResourceName === 'function') ? GetParentResourceName() : 'UNDEFINED_FN';
+        resourceName = GetParentResourceName();
     } catch (e) {
         resourceName = 'ERROR_' + e.message;
     }
 }
-console.log('[job_outfit] resourceName =', JSON.stringify(resourceName), '| IN_FIVEM =', IN_FIVEM);
+console.log('[job_outfit] resourceName =', JSON.stringify(resourceName), '| IN_FIVEM =', IN_FIVEM, '| host =', window.location.hostname);
 
 let DEBUG = false;
 function dbg(...args) {
