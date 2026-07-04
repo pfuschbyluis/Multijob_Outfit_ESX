@@ -66,7 +66,6 @@ function JobOutfit.SetDesiredFocus(state, reason)
     s.desiredFocus = state == true
     s.nuiFocusActive = s.desiredFocus
     s.lastFocusReason = reason or (s.desiredFocus and 'open' or 'close')
-    JobOutfit.Debug(('Fokus gewünscht = %s (Grund: %s)'):format(tostring(s.desiredFocus), s.lastFocusReason), 'FOCUS')
 
     -- Sofortversuch (funktioniert außerhalb von NUI-Callbacks)
     SetNuiFocus(s.desiredFocus, s.desiredFocus)
@@ -106,8 +105,8 @@ function JobOutfit.CloseAllNui()
     SendNUIMessage({ action = 'closeAdmin' })
 end
 
--- Reconciliation-Thread: korrigiert Ist- vs. Soll-Fokus jeden Frame, sobald
--- eine Abweichung besteht. Im Ruhezustand nur alle 250 ms, um CPU zu sparen.
+-- Reconciliation-Thread: korrigiert Ist- vs. Soll-Fokus, sobald eine Abweichung
+-- besteht. Im Ruhezustand nur alle 250 ms, um CPU zu sparen.
 CreateThread(function()
     local s = JobOutfit.State
     while true do
@@ -122,9 +121,9 @@ CreateThread(function()
             if SetNuiFocusKeepInput then
                 SetNuiFocusKeepInput(false)
             end
-            JobOutfit.Debug(('Reconcile: Ist-Fokus=%s -> Soll=%s (Grund: %s)'):format(
-                tostring(actual), tostring(s.desiredFocus), s.lastFocusReason), 'FOCUS')
-            Wait(0)
+            -- Nicht jeden Frame erzwingen: verhindert Log-/CPU-Spam, falls ein
+            -- anderes UI den Fokus hält oder CEF kurzzeitig nicht reagiert.
+            Wait(100)
         else
             Wait(250)
         end
