@@ -17,6 +17,11 @@ const root       = document.getElementById('root');
 const IN_FIVEM = window.location.hostname === 'nui-game-internal';
 const resourceName = IN_FIVEM ? GetParentResourceName() : 'preview';
 
+let DEBUG = false;
+function dbg(...args) {
+    if (DEBUG) console.log('[job_outfit]', ...args);
+}
+
 /* ---------- Icon-Set (Inline-SVG, erbt currentColor) ---------- */
 
 const ICON = {
@@ -86,12 +91,15 @@ function animateIn(el, fromX, delay, dur) {
 }
 
 function post(name, data = {}) {
+    dbg('POST ->', name, data);
     if (!IN_FIVEM) return Promise.resolve();
     return fetch(`https://${resourceName}/${name}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json; charset=UTF-8' },
         body: JSON.stringify(data)
-    }).catch((err) => console.error('[job_outfit] NUI-Post fehlgeschlagen:', name, err));
+    })
+        .then((res) => dbg('POST ok <-', name, res.status))
+        .catch((err) => console.error('[job_outfit] NUI-Post fehlgeschlagen:', name, err));
 }
 
 function hexToRgb(hex) {
@@ -263,6 +271,8 @@ window.addEventListener('message', (event) => {
         return;
     }
     if (data.action === 'open') {
+        DEBUG = !!data.debug;
+        dbg('open empfangen, DEBUG =', DEBUG);
         try {
             render(data);
         } catch (err) {

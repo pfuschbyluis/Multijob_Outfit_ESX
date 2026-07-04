@@ -6,13 +6,22 @@
     const IN_FIVEM = window.location.hostname === 'nui-game-internal';
     const resourceName = IN_FIVEM ? GetParentResourceName() : 'preview';
 
+    let DEBUG = false;
+
+    function dbg(...args) {
+        if (DEBUG) console.log('[job_outfit:admin]', ...args);
+    }
+
     function post(name, data = {}) {
+        dbg('POST ->', name, data);
         if (!IN_FIVEM) return Promise.resolve();
         return fetch(`https://${resourceName}/${name}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=UTF-8' },
             body: JSON.stringify(data)
-        }).catch((err) => console.error('[job_outfit:admin] NUI-Post fehlgeschlagen:', name, err));
+        })
+            .then((res) => dbg('POST ok <-', name, res.status))
+            .catch((err) => console.error('[job_outfit:admin] NUI-Post fehlgeschlagen:', name, err));
     }
 
     const app = document.getElementById('adminApp');
@@ -651,11 +660,13 @@
     });
 
     function closePanel() {
+        dbg('closePanel()');
         app.classList.add('hidden');
         post('admin:close');
     }
 
     function savePanel() {
+        dbg('savePanel()');
         app.classList.add('hidden');
         post('admin:save', state);
     }
@@ -699,6 +710,8 @@
 
         if (data.action !== 'openAdmin') return;
 
+        DEBUG = !!data.debug;
+        dbg('openAdmin empfangen, DEBUG =', DEBUG);
         state = JSON.parse(JSON.stringify(data.settings || {}));
         state.AllowedJobs = state.AllowedJobs || {};
         state.JobPeds = state.JobPeds || {};

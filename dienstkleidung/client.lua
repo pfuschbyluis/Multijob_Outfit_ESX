@@ -11,49 +11,77 @@ local HandleCharacterLogout = nil
 local SpawnAllPeds = nil
 local DeleteSpawnedPeds = nil
 
-local function Debug(msg)
-    if Config.Debug then
-        print(('[job_outfit] %s'):format(tostring(msg)))
-    end
+-- ============================================================
+-- Debug-System
+-- ============================================================
+-- Laufzeit-Umschalter (unabhängig von Config.Debug, per /outfitdebug togglebar)
+local debugEnabled = nil     -- nil = Config.Debug verwenden
+local debugHud = false       -- On-Screen-Overlay mit Live-Status
+
+local function IsDebug()
+    if debugEnabled ~= nil then return debugEnabled end
+    return Config.Debug == true
+end
+
+local function Debug(msg, cat)
+    if not IsDebug() then return end
+    cat = cat or 'INFO'
+    print(('^3[job_outfit]^7 [%.3f] [%s] %s'):format(GetGameTimer() / 1000, cat, tostring(msg)))
 end
 
 local nuiFocusActive = false
 local outfitMenuOpen = false
 local adminMenuOpen = false
+local lastFocusReason = 'init'
 
-local function SetNuiOpen(open)
-    nuiFocusActive = open == true
+-- ============================================================
+-- Zentraler NUI-Fokus-Manager
+-- ============================================================
+-- desiredFocus = was wir WOLLEN. Ein dauerhafter Thread gleicht den
+-- TATSÄCHLICHEN Fokus (IsNuiFocused) frame-genau mit desiredFocus ab.
+-- Grund: SetNuiFocus(false) innerhalb eines RegisterNUICallback wird von
+-- FiveM-CEF gelegentlich ignoriert (deshalb ging /outfitunstuck, aber ein
+-- Klick auf Schließen nicht). Die Reconciliation läuft im normalen
+-- Thread-Kontext und wirkt daher immer.
+local desiredFocus = false
 
-    SetNuiFocus(nuiFocusActive, nuiFocusActive)
+local function SetDesiredFocus(state, reason)
+    desiredFocus = state == true
+    nuiFocusActive = desiredFocus
+    lastFocusReason = reason or (desiredFocus and 'open' or 'close')
+    Debug(('Fokus gewünscht = %s (Grund: %s)'):format(tostring(desiredFocus), lastFocusReason), 'FOCUS')
 
+    -- Sofortversuch (funktioniert außerhalb von NUI-Callbacks)
+    SetNuiFocus(desiredFocus, desiredFocus)
     if SetNuiFocusKeepInput then
         SetNuiFocusKeepInput(false)
     end
+end
+
+local function SetNuiOpen(open, reason)
+    SetDesiredFocus(open, reason or 'SetNuiOpen')
 end
 
 local function ReleaseNuiFocus()
-    nuiFocusActive = false
-    SetNuiFocus(false, false)
-
-    if SetNuiFocusKeepInput then
-        SetNuiFocusKeepInput(false)
-    end
+    SetDesiredFocus(false, 'ReleaseNuiFocus')
 end
 
--- Watchdog: gleicht den TATSÄCHLICHEN NUI-Fokus (IsNuiFocused) mit dem
--- gewünschten Zustand (nuiFocusActive) ab. Läuft im normalen Thread-Kontext,
--- deshalb wirkt SetNuiFocus hier zuverlässig – auch wenn der Aufruf innerhalb
--- eines RegisterNUICallback (z. B. beim Schließen) von CEF ignoriert wurde.
+-- Reconciliation-Thread: korrigiert Ist- vs. Soll-Fokus jeden Frame, sobald
+-- eine Abweichung besteht. Im Ruhezustand nur alle 250 ms, um CPU zu sparen.
 CreateThread(function()
     while true do
-        Wait(150)
+        local actual = IsNuiFocused()
 
-        if not nuiFocusActive and IsNuiFocused() then
-            SetNuiFocus(false, false)
+        if actual ~= desiredFocus then
+            SetNuiFocus(desiredFocus, desiredFocus)
             if SetNuiFocusKeepInput then
                 SetNuiFocusKeepInput(false)
             end
-            Debug('Watchdog: hängender NUI-Fokus zurückgesetzt')
+            Debug(('Reconcile: Ist-Fokus=%s -> Soll=%s (Grund: %s)'):format(
+                tostring(actual), tostring(desiredFocus), lastFocusReason), 'FOCUS')
+            Wait(0)
+        else
+            Wait(250)
         end
     end
 end)
@@ -202,19 +230,21 @@ local function Notify(msg, typ, duration)
 end
 
 local function CloseOutfitMenu()
+    Debug('CloseOutfitMenu()', 'MENU')
     outfitMenuOpen = false
     ReleaseNuiFocus()
     SendNUIMessage({ action = 'close' })
 end
 
 local function CloseAdminPanel()
-    Debug('CloseAdminPanel aufgerufen')
+    Debug('CloseAdminPanel()', 'ADMIN')
     adminMenuOpen = false
     ReleaseNuiFocus()
     SendNUIMessage({ action = 'closeAdmin' })
 end
 
 local function CloseAllNui()
+    Debug('CloseAllNui()', 'MENU')
     outfitMenuOpen = false
     adminMenuOpen = false
     ReleaseNuiFocus()
@@ -227,6 +257,89 @@ end
 RegisterCommand('outfitunstuck', function()
     CloseAllNui()
 end, false)
+
+-- ============================================================
+-- Debug-Befehle
+-- ============================================================
+local function DumpStatus()
+    print('^2======== [job_outfit] STATUS ========^7')
+    print(('Debug aktiv:       %s (Config.Debug=%s, override=%s)'):format(tostring(IsDebug()), tostring(Config.Debug), tostring(debugEnabled)))
+    print(('desiredFocus:      %s'):format(tostring(desiredFocus)))
+    print(('nuiFocusActive:    %s'):format(tostring(nuiFocusActive)))
+    print(('IsNuiFocused():    %s'):format(tostring(IsNuiFocused())))
+    print(('outfitMenuOpen:    %s'):format(tostring(outfitMenuOpen)))
+    print(('adminMenuOpen:     %s'):format(tostring(adminMenuOpen)))
+    print(('letzter Fokusgrund: %s'):format(tostring(lastFocusReason)))
+    local job = PlayerData and PlayerData.job
+    print(('Job:               %s (grade %s)'):format(tostring(job and job.name), tostring(job and job.grade)))
+    print(('MenuType:          %s'):format(tostring(Config.MenuType)))
+    print(('Interaction:       %s'):format(tostring(Config.Interaction)))
+    print(('ClothingSystem:    %s'):format(tostring(Config.ClothingSystem)))
+    print(('Notify:            %s'):format(tostring(Config.Notify)))
+    print(('ESX geladen:       %s'):format(tostring(ESX ~= nil)))
+    print(('ox_lib:            %s'):format(tostring(lib ~= nil)))
+    print('^2=====================================^7')
+end
+
+-- Debug an/aus schalten: /outfitdebug [on|off|hud|status]
+RegisterCommand('outfitdebug', function(_, args)
+    local mode = (args[1] or 'toggle'):lower()
+
+    if mode == 'on' then
+        debugEnabled = true
+        print('^2[job_outfit] Debug EIN^7')
+    elseif mode == 'off' then
+        debugEnabled = false
+        debugHud = false
+        print('^1[job_outfit] Debug AUS^7')
+    elseif mode == 'hud' then
+        debugEnabled = true
+        debugHud = not debugHud
+        print(('^3[job_outfit] Debug-HUD: %s^7'):format(debugHud and 'EIN' or 'AUS'))
+    elseif mode == 'status' then
+        DumpStatus()
+    else
+        debugEnabled = not IsDebug()
+        print(('^3[job_outfit] Debug: %s^7'):format(IsDebug() and 'EIN' or 'AUS'))
+    end
+end, false)
+
+-- Schnell-Status: /outfitstatus
+RegisterCommand('outfitstatus', function()
+    DumpStatus()
+end, false)
+
+-- On-Screen-HUD: zeigt Live-Fokusstatus, damit man Stuck-Zustände sofort sieht.
+CreateThread(function()
+    while true do
+        if debugHud then
+            Wait(0)
+            local actual = IsNuiFocused()
+            local mismatch = (actual ~= desiredFocus)
+            local lines = {
+                '~y~[job_outfit DEBUG]~s~',
+                ('desiredFocus: %s'):format(desiredFocus and '~g~true~s~' or '~r~false~s~'),
+                ('IsNuiFocused: %s'):format(actual and '~g~true~s~' or '~r~false~s~'),
+                ('mismatch: %s'):format(mismatch and '~r~JA~s~' or '~g~nein~s~'),
+                ('outfitMenuOpen: %s'):format(tostring(outfitMenuOpen)),
+                ('adminMenuOpen: %s'):format(tostring(adminMenuOpen)),
+                ('letzter Grund: %s'):format(tostring(lastFocusReason)),
+            }
+
+            for i, text in ipairs(lines) do
+                SetTextFont(4)
+                SetTextScale(0.34, 0.34)
+                SetTextColour(255, 255, 255, 220)
+                SetTextOutline()
+                SetTextEntry('STRING')
+                AddTextComponentString(text)
+                DrawText(0.015, 0.30 + (i - 1) * 0.022)
+            end
+        else
+            Wait(500)
+        end
+    end
+end)
 
 local function GetJob()
     local data = RefreshPlayerData()
@@ -750,10 +863,12 @@ local function OpenCustomMenu(jobName)
         }
     end
 
+    Debug(('Outfit-Menü öffnen (job=%s, outfits=%d)'):format(tostring(jobName), #nuiOutfits), 'MENU')
     outfitMenuOpen = true
-    SetNuiOpen(true)
+    SetNuiOpen(true, 'OpenCustomMenu')
     SendNUIMessage({
         action = 'open',
+        debug = IsDebug(),
         title = 'Dienstkleidung',
         job = jobName,
         jobLabel = realJobName,
@@ -774,6 +889,7 @@ local function OpenJobOutfitMenu(jobName)
 end
 
 RegisterNUICallback('close', function(_, cb)
+    Debug('NUI-Callback: close', 'NUI')
     CloseOutfitMenu()
     cb('ok')
 end)
@@ -1032,11 +1148,13 @@ RegisterNetEvent('job_outfit:admin:saveError', function(reason)
 end)
 
 RegisterNetEvent('job_outfit:admin:openPanel', function(settings, jobKeys, configuredJobs)
+    Debug('Server-Event: openPanel', 'ADMIN')
     adminMenuOpen = true
-    SetNuiOpen(true)
+    SetNuiOpen(true, 'openPanel')
 
     SendNUIMessage({
         action = 'openAdmin',
+        debug = IsDebug(),
         settings = settings,
         jobKeys = jobKeys or {},
         configuredJobs = configuredJobs or {}
@@ -1065,12 +1183,14 @@ RegisterNUICallback('admin:getPosition', function(_, cb)
 end)
 
 RegisterNUICallback('admin:save', function(data, cb)
+    Debug('NUI-Callback: admin:save', 'NUI')
     CloseAdminPanel()
     TriggerServerEvent('job_outfit:admin:save', data)
     cb('ok')
 end)
 
 RegisterNUICallback('admin:close', function(_, cb)
+    Debug('NUI-Callback: admin:close', 'NUI')
     CloseAdminPanel()
     cb('ok')
 end)

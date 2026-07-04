@@ -24,6 +24,19 @@ ensure dienstkleidung
 |--------|--------------|
 | `/outfitadmin` | Admin-Panel öffnen |
 | `/outfitunstuck` | NUI-Fokus zurücksetzen (Notfall) |
+| `/outfitdebug [on\|off\|hud\|status]` | Debug-Modus steuern |
+| `/outfitstatus` | Aktuellen Status in die Konsole ausgeben |
+
+### Debug-Modus
+
+- `/outfitdebug on` – ausführliche Logs in der **F8-Konsole** (Fokus, Menü, NUI-Callbacks)
+- `/outfitdebug hud` – blendet ein Live-Overlay ein (zeigt `desiredFocus`, `IsNuiFocused`, Menü-Status)
+- `/outfitdebug status` bzw. `/outfitstatus` – einmaliger Status-Dump
+- `/outfitdebug off` – alles aus
+
+Der Debug-Modus loggt auch in der Browser-Konsole der NUI (über die F8-Devtools erreichbar), sodass sich Klick → `POST` → Lua-Callback lückenlos nachverfolgen lässt.
+
+Dauerhaft aktivierbar über `Config.Debug = true` in `config.lua`.
 
 ## Admin-Berechtigung
 
