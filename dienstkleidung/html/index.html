@@ -77,30 +77,36 @@
                 <div class="admin__layout">
 
                     <nav class="admin__sidebar" id="adminTabs">
-                        <button type="button" data-tab="general" class="sidebar-btn is-active">
-                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-                            <span>Allgemein</span>
-                        </button>
-                        <button type="button" data-tab="notify" class="sidebar-btn">
-                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-                            <span>Benachrichtigungen</span>
-                        </button>
-                        <button type="button" data-tab="jobs" class="sidebar-btn">
-                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                            <span>Jobs</span>
-                        </button>
-                        <button type="button" data-tab="outfits" class="sidebar-btn">
-                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 5 6.2 3.5 9.6 6 11v8.5h12V11l2.5-1.4L19 6.2 15 4a3 3 0 0 1-6 0Z"/></svg>
-                            <span>Outfits</span>
-                        </button>
-                        <button type="button" data-tab="peds" class="sidebar-btn">
-                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                            <span>Outfit-Peds</span>
-                        </button>
-                        <button type="button" data-tab="interaction" class="sidebar-btn">
-                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m5 9 4-4 4 4m-4-4v12m6-4 4 4-4 4m4-4H9"/></svg>
-                            <span>Interaktion</span>
-                        </button>
+                        <div class="sidebar-group">
+                            <span class="sidebar-group__label">Einstellungen</span>
+                            <button type="button" data-tab="general" class="sidebar-btn is-active">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                                <span>Allgemein</span>
+                            </button>
+                            <button type="button" data-tab="notify" class="sidebar-btn">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                                <span>Benachrichtigungen</span>
+                            </button>
+                            <button type="button" data-tab="jobs" class="sidebar-btn">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                                <span>Jobs</span>
+                            </button>
+                            <button type="button" data-tab="interaction" class="sidebar-btn">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m5 9 4-4 4 4m-4-4v12m6-4 4 4-4 4m4-4H9"/></svg>
+                                <span>Interaktion</span>
+                            </button>
+                        </div>
+                        <div class="sidebar-group">
+                            <span class="sidebar-group__label">Inhalt</span>
+                            <button type="button" data-tab="outfits" class="sidebar-btn">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 5 6.2 3.5 9.6 6 11v8.5h12V11l2.5-1.4L19 6.2 15 4a3 3 0 0 1-6 0Z"/></svg>
+                                <span>Outfits</span>
+                            </button>
+                            <button type="button" data-tab="peds" class="sidebar-btn">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                                <span>Outfit-Peds</span>
+                            </button>
+                        </div>
                     </nav>
 
                     <div class="admin__body" id="adminBody"></div>

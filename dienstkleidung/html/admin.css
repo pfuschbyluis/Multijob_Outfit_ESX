@@ -16,13 +16,13 @@
     width: 100%;
     height: 100%;
     /* Kein backdrop-filter: FiveM-CEF rendert das sonst oft als komplett schwarzen Screen. */
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.42);
     padding: 20px;
 }
 
 .admin__panel {
-    width: min(1040px, 100%);
-    height: min(710px, 100%);
+    width: min(1080px, 100%);
+    height: min(720px, 100%);
     display: flex;
     flex-direction: column;
     background: var(--bg-panel);
@@ -46,6 +46,7 @@
     padding: 16px 22px;
     border-bottom: 1px solid var(--border-soft);
     flex-shrink: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%);
 }
 
 .admin__brand {
@@ -55,9 +56,9 @@
 }
 
 .admin__brand-icon {
-    width: 38px; height: 38px;
+    width: 40px; height: 40px;
     display: grid; place-items: center;
-    border-radius: 11px;
+    border-radius: 12px;
     background: var(--accent-weak);
     color: var(--accent);
     transition: background 0.25s, color 0.25s;
@@ -80,14 +81,30 @@
 
 /* ─── Sidebar ────────────────────────────────────────────── */
 .admin__sidebar {
-    width: 215px;
+    width: 220px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding: 14px 10px;
+    gap: 18px;
+    padding: 16px 12px;
     border-right: 1px solid var(--border-soft);
     overflow-y: auto;
+    background: rgba(0,0,0,0.14);
+}
+
+.sidebar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.sidebar-group__label {
+    font-size: 9.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-3);
+    padding: 0 10px 6px;
 }
 
 .sidebar-btn {
@@ -96,7 +113,7 @@
     gap: 10px;
     width: 100%;
     padding: 10px 12px;
-    border: 0;
+    border: 1px solid transparent;
     border-radius: 10px;
     background: transparent;
     color: var(--text-2);
@@ -104,28 +121,70 @@
     font-weight: 600;
     text-align: left;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.sidebar-btn svg { flex-shrink: 0; }
-.sidebar-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+.sidebar-btn svg { flex-shrink: 0; opacity: 0.85; }
+.sidebar-btn:hover {
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    border-color: var(--border-soft);
+}
 .sidebar-btn.is-active {
     background: var(--accent-weak);
     color: var(--accent);
+    border-color: rgba(255, 90, 60, 0.18);
 }
+.sidebar-btn.is-active svg { opacity: 1; }
 
 /* ─── Body ───────────────────────────────────────────────── */
 .admin__body {
     flex: 1;
     overflow-y: auto;
-    padding: 24px 28px 28px;
+    padding: 22px 26px 28px;
     min-width: 0;
 }
 
-/* ─── Section title ──────────────────────────────────────── */
-.admin-section { margin-bottom: 28px; }
+/* ─── Tab page header ────────────────────────────────────── */
+.tab-page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.tab-page__head {
+    padding-bottom: 4px;
+}
+
+.tab-page__title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.tab-page__desc {
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-2);
+    max-width: 62ch;
+}
+
+/* ─── Section cards ──────────────────────────────────────── */
+.admin-section {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    padding: 18px 20px 20px;
+}
+
+.admin-section + .admin-section {
+    margin-top: 0;
+}
 
 .admin-section__title {
     font-size: 10px;
@@ -133,19 +192,49 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-3);
-    padding-bottom: 11px;
+    padding-bottom: 12px;
     border-bottom: 1px solid var(--border-soft);
-    margin-bottom: 15px;
+    margin-bottom: 16px;
+}
+
+.help-text {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--text-2);
+    margin-bottom: 14px;
+}
+
+.info-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 14px;
+    margin-bottom: 16px;
+    border-radius: 10px;
+    background: rgba(77, 155, 255, 0.08);
+    border: 1px solid rgba(77, 155, 255, 0.18);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-2);
+}
+
+.info-banner svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #4d9bff;
 }
 
 /* ─── Grid ───────────────────────────────────────────────── */
 .admin-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 13px 20px;
+    gap: 14px 18px;
 }
 .admin-grid--narrow { grid-template-columns: repeat(3, 1fr); }
-.admin-grid--wide   { grid-template-columns: 1fr; }
+.admin-grid--single { grid-template-columns: 1fr; }
+
+.span-2 { grid-column: span 2; }
+.span-3 { grid-column: span 3; }
 
 /* ─── Field ──────────────────────────────────────────────── */
 .field {
@@ -155,7 +244,8 @@
 }
 
 .field label,
-.field > label {
+.field > label,
+.field > span {
     font-size: 11px;
     font-weight: 700;
     color: var(--text-2);
@@ -166,7 +256,7 @@
 .field input[type="text"],
 .field input[type="number"],
 .field input[type="email"] {
-    background: var(--bg-surface);
+    background: rgba(0,0,0,0.22);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 10px 12px;
@@ -175,9 +265,12 @@
     font-family: inherit;
     outline: none;
     width: 100%;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, background 0.15s;
 }
-.field input:focus { border-color: var(--accent-line); }
+.field input:focus {
+    border-color: var(--accent-line);
+    background: rgba(0,0,0,0.3);
+}
 .field input::placeholder { color: var(--text-3); }
 
 /* Checkbox-field variant */
@@ -185,12 +278,17 @@
     flex-direction: row !important;
     align-items: center;
     gap: 11px !important;
-    padding: 13px 15px;
-    background: var(--bg-surface);
+    padding: 12px 14px;
+    background: rgba(0,0,0,0.18);
     border: 1px solid var(--border-soft);
     border-radius: 11px;
     cursor: pointer;
     align-self: start;
+    transition: border-color 0.15s, background 0.15s;
+}
+.field--checkbox:hover {
+    border-color: var(--border);
+    background: rgba(0,0,0,0.24);
 }
 
 .field--checkbox input[type="checkbox"] {
@@ -201,7 +299,8 @@
 }
 
 .field--checkbox label,
-.field--checkbox > label {
+.field--checkbox > label,
+.field--checkbox > span {
     font-size: 13.5px;
     font-weight: 600;
     color: var(--text);
@@ -210,19 +309,17 @@
     cursor: pointer;
 }
 
-/* Inline checkbox (peds / jobs) */
-.inline-check {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 12.5px;
-    color: var(--text-2);
-    cursor: pointer;
+.field--checkbox-compact {
+    padding: 8px 12px;
+    align-self: center;
 }
-.inline-check input { width: 14px; height: 14px; accent-color: var(--accent); }
 
-/* span 2 helper */
-.span-2 { grid-column: span 2; }
+.ped-card__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
 
 /* ─── Custom select (xselect) ────────────────────────────── */
 .xselect {
@@ -233,7 +330,7 @@
 .xselect__trigger {
     width: 100%;
     text-align: left;
-    background: var(--bg-surface);
+    background: rgba(0,0,0,0.22);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 10px 36px 10px 12px;
@@ -241,7 +338,7 @@
     font-size: 13.5px;
     font-family: inherit;
     cursor: pointer;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, background 0.15s;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -261,8 +358,14 @@
     transition: transform 0.15s;
 }
 .xselect.is-open .xselect__trigger::after { transform: translateY(-50%) rotate(180deg); }
-.xselect__trigger:hover { border-color: rgba(255,255,255,0.14); }
-.xselect.is-open .xselect__trigger { border-color: var(--accent-line); }
+.xselect__trigger:hover {
+    border-color: rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.28);
+}
+.xselect.is-open .xselect__trigger {
+    border-color: var(--accent-line);
+    background: rgba(0,0,0,0.3);
+}
 
 .xselect__list {
     display: none;
@@ -270,7 +373,7 @@
     left: 0; right: 0;
     top: calc(100% + 5px);
     z-index: 900;
-    background: #1a1d28;
+    background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: 11px;
     box-shadow: 0 16px 40px rgba(0,0,0,0.55);
@@ -307,7 +410,7 @@
 /* ─── Job toggle grid ────────────────────────────────────── */
 .job-toggle-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     gap: 8px;
 }
 
@@ -316,14 +419,18 @@
     align-items: center;
     gap: 10px;
     padding: 11px 13px;
-    background: var(--bg-surface);
+    background: rgba(0,0,0,0.18);
     border: 1px solid var(--border-soft);
     border-radius: 10px;
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
     color: var(--text);
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, background 0.15s;
+}
+.job-toggle:hover {
+    border-color: var(--border);
+    background: rgba(0,0,0,0.24);
 }
 .job-toggle input[type="checkbox"] {
     width: 15px; height: 15px;
@@ -349,8 +456,8 @@
 .outfit-list {
     display: flex;
     flex-direction: column;
-    gap: 7px;
-    margin-bottom: 14px;
+    gap: 8px;
+    margin: 16px 0 14px;
 }
 
 .outfit-row {
@@ -358,9 +465,14 @@
     align-items: center;
     gap: 12px;
     padding: 12px 15px;
-    background: var(--bg-surface);
+    background: rgba(0,0,0,0.18);
     border: 1px solid var(--border-soft);
     border-radius: 11px;
+    transition: border-color 0.15s, background 0.15s;
+}
+.outfit-row:hover {
+    border-color: var(--border);
+    background: rgba(0,0,0,0.24);
 }
 
 .outfit-row__grade {
@@ -371,7 +483,7 @@
     letter-spacing: 0.04em;
     white-space: nowrap;
     flex-shrink: 0;
-    min-width: 52px;
+    min-width: 56px;
 }
 
 .outfit-row__label {
@@ -389,17 +501,28 @@
 .outfit-editor-cols {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 20px;
+    gap: 16px;
+    margin-bottom: 4px;
 }
 
-.outfit-editor-col .admin-section__title { margin-bottom: 10px; }
+.outfit-editor-col {
+    background: rgba(0,0,0,0.14);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 14px 16px 16px;
+}
+
+.outfit-editor-col .admin-section__title {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+}
 
 .outfit-editor-actions {
     display: flex;
     align-items: center;
     gap: 9px;
     flex-wrap: wrap;
+    padding-top: 4px;
 }
 
 .outfit-editor-spacer { flex: 1; }
@@ -413,7 +536,7 @@
 
 .clothes-row {
     display: grid;
-    grid-template-columns: 1fr 90px 90px;
+    grid-template-columns: 1fr 88px 88px;
     gap: 8px;
     align-items: center;
 }
@@ -437,7 +560,7 @@
 }
 
 .clothes-input {
-    background: var(--bg-surface);
+    background: rgba(0,0,0,0.22);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 8px 10px;
@@ -455,17 +578,21 @@
 .ped-card {
     border: 1px solid var(--border-soft);
     border-radius: 13px;
-    padding: 17px;
-    margin-bottom: 14px;
-    background: var(--bg-surface);
+    padding: 16px 18px 18px;
+    margin-bottom: 12px;
+    background: rgba(0,0,0,0.14);
 }
+
+.ped-card:last-of-type { margin-bottom: 0; }
 
 .ped-card__head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
     gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-soft);
 }
 
 .ped-card__head h3 {
@@ -474,38 +601,47 @@
     color: var(--text);
 }
 
-.ped-card__head > div {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
 .ped-card__coords {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
-    margin-top: 12px;
-    margin-bottom: 11px;
+    margin-top: 14px;
+    margin-bottom: 12px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-soft);
 }
 
 .ped-card__coords .field label {
     font-size: 10.5px;
 }
 
-.ped-card__coords-action { }
+.ped-card__coords-action {
+    display: flex;
+    justify-content: flex-start;
+}
 
 .add-ped-row {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-soft);
 }
-.add-ped-row .xselect { min-width: 180px; }
+.add-ped-row .xselect { min-width: 180px; flex: 1; max-width: 260px; }
 
-.no-peds {
+.empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     font-size: 13px;
+    line-height: 1.5;
     color: var(--text-3);
-    padding: 12px 0;
+    padding: 28px 16px;
+    border: 1px dashed var(--border-soft);
+    border-radius: 11px;
+    background: rgba(0,0,0,0.1);
 }
 
 /* ─── Buttons ────────────────────────────────────────────── */
@@ -541,6 +677,11 @@
 }
 .btn--danger:hover { background: rgba(240,85,106,0.18); }
 
+.btn--sm {
+    padding: 7px 14px;
+    font-size: 12.5px;
+}
+
 .btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
@@ -554,6 +695,7 @@
     padding: 13px 22px;
     border-top: 1px solid var(--border-soft);
     flex-shrink: 0;
+    background: rgba(0,0,0,0.12);
 }
 
 .admin__hint {
@@ -567,6 +709,16 @@
 .admin__actions {
     display: flex;
     gap: 9px;
+}
+
+.admin__foot.is-outfits-mode .admin__actions {
+    display: none;
+}
+
+.admin__foot.is-outfits-mode .admin__hint::after {
+    content: '· Outfits werden direkt im Editor gespeichert';
+    margin-left: 4px;
+    color: var(--text-2);
 }
 
 /* Tab body animation */

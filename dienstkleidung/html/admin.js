@@ -49,6 +49,34 @@
     const closeBtn = document.getElementById('adminCloseBtn');
     const cancelBtn = document.getElementById('adminCancelBtn');
     const saveBtn = document.getElementById('adminSaveBtn');
+    const adminFoot = document.querySelector('.admin__foot');
+
+    const TAB_META = {
+        general: {
+            title: 'Allgemein',
+            desc: 'Grundlegende Einstellungen für Menü, Kleidungssystem und Zivilkleidung.'
+        },
+        notify: {
+            title: 'Benachrichtigungen',
+            desc: 'Steuert, wie Spieler über Aktionen im Outfit-Menü informiert werden.'
+        },
+        jobs: {
+            title: 'Jobs',
+            desc: 'Lege fest, welche Jobs das Outfit-Menü nutzen und Outfit-Peds spawnen dürfen.'
+        },
+        outfits: {
+            title: 'Outfits',
+            desc: 'Verwalte Kleidung pro Job und Rang. Änderungen werden direkt im Editor gespeichert.'
+        },
+        peds: {
+            title: 'Outfit-Peds',
+            desc: 'Konfiguriere NPCs, über die Spieler das Outfit-Menü öffnen können.'
+        },
+        interaction: {
+            title: 'Interaktion',
+            desc: 'Bestimme, ob Spieler per Taste oder ox_target mit Outfit-Peds interagieren.'
+        }
+    };
 
     let state = null;
     let jobKeys = [];
@@ -93,8 +121,27 @@
         return String(str || '').charAt(0).toUpperCase() + String(str || '').slice(1);
     }
 
-    function selectOptions(options, current) {
-        return options.map(o => `<option value="${o}" ${o === current ? 'selected' : ''}>${o}</option>`).join('');
+    function wrapTab(content) {
+        const meta = TAB_META[activeTab] || TAB_META.general;
+        return `
+        <div class="tab-page">
+            <header class="tab-page__head">
+                <h2 class="tab-page__title">${meta.title}</h2>
+                <p class="tab-page__desc">${meta.desc}</p>
+            </header>
+            ${content}
+        </div>`;
+    }
+
+    function checkboxField(id, path, label, checked, compact) {
+        const safeId = escapeAttr(id);
+        const safePath = escapeAttr(path);
+        const compactClass = compact ? ' field--checkbox-compact' : '';
+        return `
+        <label class="field field--checkbox${compactClass}" for="${safeId}">
+            <input type="checkbox" id="${safeId}" data-path="${safePath}" ${checked ? 'checked' : ''}>
+            <span>${escapeAttr(label)}</span>
+        </label>`;
     }
 
     // Native <select>-Popups werden von FiveMs CEF teils komplett weiß/ungestylt
@@ -131,14 +178,11 @@
     /* ---------- Tab renderers ---------- */
 
     function renderGeneral(s) {
-        return `
+        return wrapTab(`
         <div class="admin-section">
-            <div class="admin-section__title">Allgemein</div>
+            <div class="admin-section__title">Grundeinstellungen</div>
             <div class="admin-grid">
-                <div class="field field--checkbox">
-                    <input type="checkbox" id="f_debug" data-path="Debug" ${s.Debug ? 'checked' : ''}>
-                    <label for="f_debug">Debug-Ausgaben</label>
-                </div>
+                ${checkboxField('f_debug', 'Debug', 'Debug-Ausgaben', s.Debug)}
                 <div class="field">
                     <label>Menü-Typ</label>
                     ${customSelect('MenuType', ['custom', 'ox_lib'], s.MenuType)}
@@ -148,30 +192,27 @@
                     <label>Kleidungssystem</label>
                     ${customSelect('ClothingSystem', ['skinchanger', 'native'], s.ClothingSystem)}
                 </div>
-                <div class="field field--checkbox">
-                    <input type="checkbox" id="f_restore" data-path="EnableRestoreClothes" ${s.EnableRestoreClothes ? 'checked' : ''}>
-                    <label for="f_restore">Zivilkleidung wiederherstellen erlauben</label>
-                </div>
+                ${checkboxField('f_restore', 'EnableRestoreClothes', 'Zivilkleidung wiederherstellen erlauben', s.EnableRestoreClothes)}
 
-                <div class="field" style="grid-column: span 2;">
+                <div class="field span-2">
                     <label>Label „Normale Kleidung anziehen“</label>
                     <input type="text" data-path="RestoreClothesLabel" value="${escapeAttr(s.RestoreClothesLabel)}">
                 </div>
             </div>
-        </div>`;
+        </div>`);
     }
 
     function renderNotify(s) {
-        return `
+        return wrapTab(`
         <div class="admin-section">
-            <div class="admin-section__title">Benachrichtigungen</div>
+            <div class="admin-section__title">Notify-Einstellungen</div>
             <div class="admin-grid">
                 <div class="field">
                     <label>Notify-System</label>
                     ${customSelect('Notify', ['standard', 'esx', 'ox_lib', 'okok', 'mythic', 'codem', 'qs'], s.Notify)}
                 </div>
                 <div class="field">
-                    <label>Position (nur bei "standard")</label>
+                    <label>Position (nur bei „standard“)</label>
                     ${customSelect('NotifyPosition',
                         ['top-right', 'top-left', 'top-center', 'bottom-right', 'bottom-left', 'bottom-center'],
                         s.NotifyPosition
@@ -187,22 +228,21 @@
                     <input type="number" min="500" step="500" data-path="NotifyDuration" value="${s.NotifyDuration}">
                 </div>
             </div>
-        </div>`;
+        </div>`);
     }
 
     function pedCard(key, ped) {
         const c = ped.coords || { x: 0, y: 0, z: 0, w: 0 };
         const safeKey = escapeAttr(key);
         const safeLabelKey = escapeAttr(capitalize(key));
+        const checkboxId = `ped_enabled_${safeKey}`;
         return `
         <div class="ped-card" data-ped-job="${safeKey}">
             <div class="ped-card__head">
                 <h3>${safeLabelKey}</h3>
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <label class="field--checkbox" style="display:inline-flex;">
-                        <input type="checkbox" data-path="JobPeds.${safeKey}.enabled" ${ped.enabled ? 'checked' : ''}> aktiviert
-                    </label>
-                    <button type="button" class="btn btn--danger" data-remove-ped="${safeKey}">Entfernen</button>
+                <div class="ped-card__actions">
+                    ${checkboxField(checkboxId, `JobPeds.${safeKey}.enabled`, 'Aktiviert', ped.enabled, true)}
+                    <button type="button" class="btn btn--danger btn--sm" data-remove-ped="${safeKey}">Entfernen</button>
                 </div>
             </div>
             <div class="admin-grid">
@@ -214,7 +254,7 @@
                     <label>Szenario (optional)</label>
                     <input type="text" data-path="JobPeds.${safeKey}.scenario" value="${escapeAttr(ped.scenario || '')}">
                 </div>
-                <div class="field" style="grid-column: span 2;">
+                <div class="field span-2">
                     <label>Label</label>
                     <input type="text" data-path="JobPeds.${safeKey}.label" value="${escapeAttr(ped.label || '')}">
                 </div>
@@ -226,7 +266,7 @@
                 <div class="field"><label>Heading</label><input type="number" step="0.1" data-path="JobPeds.${safeKey}.coords.w" value="${c.w}"></div>
             </div>
             <div class="ped-card__coords-action">
-                <button type="button" class="btn" data-use-position="${safeKey}">Aktuelle Position übernehmen</button>
+                <button type="button" class="btn btn--sm" data-use-position="${safeKey}">Aktuelle Position übernehmen</button>
             </div>
         </div>`;
     }
@@ -243,22 +283,22 @@
             </label>`;
         }).join('');
 
-        return `
+        return wrapTab(`
         <div class="admin-section">
             <div class="admin-section__title">Erlaubte Jobs</div>
-            <p style="font-size:12px;color:var(--text-faint);margin-bottom:10px;">
+            <p class="help-text">
                 Deaktivierte Jobs können das Menü nicht öffnen, ihr Outfit-Ped wird nicht gespawnt.
                 Jobs mit „nicht konfiguriert“ haben nur leere Platzhalter-Outfits in config.lua – dort fehlt noch die eigentliche Kleidung.
             </p>
-            <div class="job-toggle-grid">${allowedHtml || '<span class="no-peds">Keine Jobs mit hinterlegten Outfits gefunden.</span>'}</div>
-        </div>`;
+            <div class="job-toggle-grid">${allowedHtml || '<div class="empty-state">Keine Jobs mit hinterlegten Outfits gefunden.</div>'}</div>
+        </div>`);
     }
 
     function renderPeds(s) {
         const pedKeys = Object.keys(s.JobPeds || {});
         const pedsHtml = pedKeys.length
             ? pedKeys.map(k => pedCard(k, s.JobPeds[k])).join('')
-            : '<div class="no-peds">Noch keine Outfit-Peds konfiguriert.</div>';
+            : '<div class="empty-state">Noch keine Outfit-Peds konfiguriert.</div>';
 
         const availableForAdd = jobKeys.filter(k => !pedKeys.includes(k));
         const addRow = availableForAdd.length ? `
@@ -272,41 +312,31 @@
                 <button type="button" class="btn" id="addPedBtn">+ Ped hinzufügen</button>
             </div>` : '';
 
-        return `
+        return wrapTab(`
         <div class="admin-section">
-            <div class="admin-section__title">Outfit-Peds</div>
+            <div class="admin-section__title">Konfigurierte Peds</div>
             ${pedsHtml}
             ${addRow}
         </div>
         <div class="admin-section">
             <div class="admin-section__title">Ped-Verhalten (gilt für alle Peds)</div>
-            <div class="admin-grid">
-                <div class="field field--checkbox"><input type="checkbox" data-path="PedSettings.freeze" ${s.PedSettings.freeze ? 'checked' : ''}><label>Eingefroren</label></div>
-                <div class="field field--checkbox"><input type="checkbox" data-path="PedSettings.invincible" ${s.PedSettings.invincible ? 'checked' : ''}><label>Unverwundbar</label></div>
-                <div class="field field--checkbox"><input type="checkbox" data-path="PedSettings.blockEvents" ${s.PedSettings.blockEvents ? 'checked' : ''}><label>Reagiert nicht auf Umgebung</label></div>
+            <div class="admin-grid admin-grid--narrow">
+                ${checkboxField('ped_freeze', 'PedSettings.freeze', 'Eingefroren', s.PedSettings.freeze)}
+                ${checkboxField('ped_invincible', 'PedSettings.invincible', 'Unverwundbar', s.PedSettings.invincible)}
+                ${checkboxField('ped_block', 'PedSettings.blockEvents', 'Reagiert nicht auf Umgebung', s.PedSettings.blockEvents)}
             </div>
-        </div>`;
+        </div>`);
     }
 
     function renderInteraction(s) {
-        return `
-        <div class="admin-section">
-            <div class="admin-section__title">Interaktion</div>
-            <div class="admin-grid">
-                <div class="field">
-                    <label>Interaktionsart</label>
-                    ${customSelect('Interaction', ['key', 'ox_target'], s.Interaction)}
-                </div>
-            </div>
-        </div>
-        ${s.Interaction === 'key' ? `
+        const keySection = s.Interaction === 'key' ? `
         <div class="admin-section">
             <div class="admin-section__title">Tasten-Interaktion</div>
             <div class="admin-grid admin-grid--narrow">
                 <div class="field"><label>Distanz</label><input type="number" step="0.1" data-path="KeyInteract.distance" value="${s.KeyInteract.distance}"></div>
                 <div class="field"><label>Sichtweite</label><input type="number" step="0.1" data-path="KeyInteract.drawDistance" value="${s.KeyInteract.drawDistance}"></div>
                 <div class="field"><label>Taste (Control-ID)</label><input type="number" data-path="KeyInteract.key" value="${s.KeyInteract.key}"></div>
-                <div class="field field--checkbox"><input type="checkbox" data-path="KeyInteract.onlyShowForAllowedJobs" ${s.KeyInteract.onlyShowForAllowedJobs ? 'checked' : ''}><label>Nur für berechtigte Jobs anzeigen</label></div>
+                <div class="span-3">${checkboxField('key_allowed', 'KeyInteract.onlyShowForAllowedJobs', 'Nur für berechtigte Jobs anzeigen', s.KeyInteract.onlyShowForAllowedJobs)}</div>
             </div>
         </div>` : `
         <div class="admin-section">
@@ -314,9 +344,21 @@
             <div class="admin-grid">
                 <div class="field"><label>Distanz</label><input type="number" step="0.1" data-path="Target.distance" value="${s.Target.distance}"></div>
                 <div class="field"><label>Icon (FontAwesome-Klasse)</label><input type="text" data-path="Target.icon" value="${escapeAttr(s.Target.icon)}"></div>
-                <div class="field" style="grid-column: span 2;"><label>Label</label><input type="text" data-path="Target.label" value="${escapeAttr(s.Target.label)}"></div>
+                <div class="field span-2"><label>Label</label><input type="text" data-path="Target.label" value="${escapeAttr(s.Target.label)}"></div>
             </div>
-        </div>`}`;
+        </div>`;
+
+        return wrapTab(`
+        <div class="admin-section">
+            <div class="admin-section__title">Interaktionsart</div>
+            <div class="admin-grid admin-grid--single">
+                <div class="field">
+                    <label>Modus</label>
+                    ${customSelect('Interaction', ['key', 'ox_target'], s.Interaction)}
+                </div>
+            </div>
+        </div>
+        ${keySection}`);
     }
 
     function clothesGrid(prefix, clothes) {
@@ -341,12 +383,12 @@
     }
 
     function outfitEditor(outfit) {
-        return `
+        return wrapTab(`
         <div class="admin-section">
             <div class="admin-section__title">${outfit.id ? 'Outfit bearbeiten' : 'Neues Outfit'} — ${escapeAttr(capitalize(outfitsUi.selectedJob))}</div>
             <div class="admin-grid">
                 <div class="field"><label>Rang (Grade-Nummer)</label><input type="number" data-outfit-field="grade" value="${outfit.grade}"></div>
-                <div class="field" style="grid-column: span 2;"><label>Bezeichnung</label><input type="text" data-outfit-field="label" value="${escapeAttr(outfit.label)}"></div>
+                <div class="field span-2"><label>Bezeichnung</label><input type="text" data-outfit-field="label" value="${escapeAttr(outfit.label)}"></div>
             </div>
         </div>
         <div class="outfit-editor-cols">
@@ -360,13 +402,13 @@
             </div>
         </div>
         <div class="outfit-editor-actions">
-            <button type="button" class="btn" id="outfitCopyBtn">Männlich → Weiblich kopieren</button>
-            <button type="button" class="btn" id="outfitPreviewBtn">Vorschau anziehen</button>
+            <button type="button" class="btn btn--sm" id="outfitCopyBtn">Männlich → Weiblich kopieren</button>
+            <button type="button" class="btn btn--sm" id="outfitPreviewBtn">Vorschau anziehen</button>
             <span class="outfit-editor-spacer"></span>
-            ${outfit.id ? '<button type="button" class="btn btn--danger" id="outfitDeleteBtn">Löschen</button>' : ''}
-            <button type="button" class="btn" id="outfitCancelBtn">Abbrechen</button>
-            <button type="button" class="btn btn--primary" id="outfitSaveBtn">Speichern</button>
-        </div>`;
+            ${outfit.id ? '<button type="button" class="btn btn--danger btn--sm" id="outfitDeleteBtn">Löschen</button>' : ''}
+            <button type="button" class="btn btn--sm" id="outfitCancelBtn">Abbrechen</button>
+            <button type="button" class="btn btn--primary btn--sm" id="outfitSaveBtn">Speichern</button>
+        </div>`);
     }
 
     function renderOutfits() {
@@ -377,38 +419,44 @@
         const selectedJob = outfitsUi.selectedJob || jobKeys[0] || null;
 
         const rows = outfitsUi.loading
-            ? '<div class="no-peds">Lade Outfits …</div>'
+            ? '<div class="empty-state">Lade Outfits …</div>'
             : (outfitsUi.list.length
                 ? outfitsUi.list.map(o => `
                     <div class="outfit-row">
                         <span class="outfit-row__grade">Rang ${escapeAttr(o.grade)}</span>
                         <span class="outfit-row__label">${escapeAttr(o.label)}</span>
-                        <button type="button" class="btn" data-edit-outfit="${o.id}">Bearbeiten</button>
+                        <button type="button" class="btn btn--sm" data-edit-outfit="${o.id}">Bearbeiten</button>
                     </div>`).join('')
-                : '<div class="no-peds">Noch keine Outfits für diesen Job.</div>');
+                : '<div class="empty-state">Noch keine Outfits für diesen Job.</div>');
 
-        return `
+        return wrapTab(`
         <div class="admin-section">
-            <div class="admin-section__title">Outfits (Kleidung)</div>
-            <p style="font-size:12px;color:var(--text-faint);margin-bottom:10px;">
-                Outfits werden pro Job und Rang (Grade-Nummer) verwaltet. Der Rang muss mit dem
-                tatsächlichen ESX-Job-Grade des Spielers übereinstimmen.
-            </p>
-            <div class="admin-grid">
+            <div class="admin-section__title">Outfit-Liste</div>
+            <div class="info-banner">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                <span>Outfits werden pro Job und Rang verwaltet. Der Rang muss mit dem tatsächlichen ESX-Job-Grade des Spielers übereinstimmen. Änderungen speicherst du direkt im Editor.</span>
+            </div>
+            <div class="admin-grid admin-grid--single">
                 <div class="field">
                     <label>Job</label>
-                    ${jobKeys.length ? customSelect('__outfitsJob', jobKeys, selectedJob, jobKeys.map(capitalize)) : '<span class="no-peds">Keine Jobs bekannt.</span>'}
+                    ${jobKeys.length ? customSelect('__outfitsJob', jobKeys, selectedJob, jobKeys.map(capitalize)) : '<div class="empty-state">Keine Jobs bekannt.</div>'}
                 </div>
             </div>
             <div class="outfit-list">${rows}</div>
             <button type="button" class="btn btn--primary" id="outfitNewBtn" ${selectedJob ? '' : 'disabled'}>+ Neues Outfit</button>
-        </div>`;
+        </div>`);
+    }
+
+    function updateFooter() {
+        if (!adminFoot) return;
+        adminFoot.classList.toggle('is-outfits-mode', activeTab === 'outfits');
     }
 
     function render() {
         if (!state) return;
 
-        tabsNav.querySelectorAll('button').forEach(b => b.classList.toggle('is-active', b.dataset.tab === activeTab));
+        tabsNav.querySelectorAll('button[data-tab]').forEach(b => b.classList.toggle('is-active', b.dataset.tab === activeTab));
+        updateFooter();
 
         const renderers = {
             general: renderGeneral,
