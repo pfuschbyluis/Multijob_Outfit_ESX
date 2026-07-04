@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dienstkleidung</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+    <!-- Notify-Container -->
+    <div id="root" data-position="top-right"></div>
+
+    <!-- ═══════════ OUTFIT-MENÜ ═══════════ -->
+    <main id="app" class="hidden">
+        <section class="menu" id="menu">
+
+            <header class="menu__head">
+                <div class="brand">
+                    <div class="brand__icon" id="jobIcon"></div>
+                    <div class="brand__text">
+                        <p class="eyebrow" id="eyebrow">Dienstkleidung</p>
+                        <h1 class="brand__title" id="menuTitle">Feuerwehr</h1>
+                    </div>
+                </div>
+                <button id="closeBtn" class="iconbtn" aria-label="Schließen">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
+            </header>
+
+            <div class="rankrow">
+                <span class="rank" id="rank">
+                    <span class="rank__dot"></span>
+                    <span id="rankLabel">Rang</span>
+                </span>
+                <span class="count" id="count"></span>
+            </div>
+
+            <div class="menu__divider"></div>
+
+            <div class="list" id="outfitList"></div>
+
+            <footer class="menu__foot">
+                <span class="kbd">ESC</span>
+                <span>Menü schließen</span>
+            </footer>
+
+        </section>
+    </main>
+
+    <!-- ═══════════ ADMIN-PANEL ═══════════ -->
+    <main id="adminApp" class="admin hidden">
+        <div class="admin__overlay">
+            <section class="admin__panel">
+
+                <header class="admin__head">
+                    <div class="admin__brand">
+                        <div class="admin__brand-icon">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="eyebrow">Dienstkleidung</p>
+                            <h1>Admin-Panel</h1>
+                        </div>
+                    </div>
+                    <button id="adminCloseBtn" class="iconbtn" aria-label="Schließen">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                    </button>
+                </header>
+
+                <div class="admin__layout">
+
+                    <nav class="admin__sidebar" id="adminTabs">
+                        <button type="button" data-tab="general" class="sidebar-btn is-active">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                            <span>Allgemein</span>
+                        </button>
+                        <button type="button" data-tab="notify" class="sidebar-btn">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                            <span>Benachrichtigungen</span>
+                        </button>
+                        <button type="button" data-tab="jobs" class="sidebar-btn">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                            <span>Jobs</span>
+                        </button>
+                        <button type="button" data-tab="outfits" class="sidebar-btn">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 5 6.2 3.5 9.6 6 11v8.5h12V11l2.5-1.4L19 6.2 15 4a3 3 0 0 1-6 0Z"/></svg>
+                            <span>Outfits</span>
+                        </button>
+                        <button type="button" data-tab="peds" class="sidebar-btn">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                            <span>Outfit-Peds</span>
+                        </button>
+                        <button type="button" data-tab="interaction" class="sidebar-btn">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m5 9 4-4 4 4m-4-4v12m6-4 4 4-4 4m4-4H9"/></svg>
+                            <span>Interaktion</span>
+                        </button>
+                    </nav>
+
+                    <div class="admin__body" id="adminBody"></div>
+
+                </div>
+
+                <footer class="admin__foot">
+                    <span class="admin__hint">
+                        <span class="kbd">ESC</span>
+                        schließt ohne Speichern
+                    </span>
+                    <div class="admin__actions">
+                        <button id="adminCancelBtn" class="btn" type="button">Abbrechen</button>
+                        <button id="adminSaveBtn" class="btn btn--primary" type="button">Speichern</button>
+                    </div>
+                </footer>
+
+            </section>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
