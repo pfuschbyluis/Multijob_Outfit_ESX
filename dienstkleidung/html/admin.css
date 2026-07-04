@@ -121,6 +121,8 @@
     font-weight: 600;
     text-align: left;
     cursor: pointer;
+    outline: none;
+    box-shadow: none;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
     white-space: nowrap;
     overflow: hidden;
@@ -131,6 +133,12 @@
     background: rgba(255,255,255,0.05);
     color: var(--text);
     border-color: var(--border-soft);
+}
+.sidebar-btn:focus,
+.sidebar-btn:focus-visible,
+.sidebar-btn:active {
+    outline: none;
+    box-shadow: none;
 }
 .sidebar-btn.is-active {
     background: var(--accent-weak);
@@ -407,6 +415,8 @@
     font-size: 13.5px;
     font-family: inherit;
     cursor: pointer;
+    outline: none;
+    box-shadow: none;
     transition: border-color 0.15s, background 0.15s;
     white-space: nowrap;
     overflow: hidden;
@@ -468,6 +478,8 @@
     font-size: 13px;
     font-family: inherit;
     cursor: pointer;
+    outline: none;
+    box-shadow: none;
     transition: background 0.12s, color 0.12s;
     white-space: nowrap;
     overflow: hidden;
@@ -776,17 +788,37 @@
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
+    outline: none;
+    box-shadow: none;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
     white-space: nowrap;
 }
 .btn:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+.btn:focus,
+.btn:focus-visible,
+.btn:active {
+    outline: none;
+    box-shadow: none;
+}
 
 .btn--primary {
     background: var(--accent);
-    border-color: transparent;
+    border-color: var(--accent);
     color: #06080f;
 }
 .btn--primary:hover { filter: brightness(1.1); }
+.btn--primary:focus,
+.btn--primary:focus-visible {
+    border-color: var(--accent);
+}
+
+.btn--activate:focus,
+.btn--activate:focus-visible,
+.btn--deactivate:focus,
+.btn--deactivate:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
 
 .btn--danger {
     border-color: rgba(240,85,106,0.35);

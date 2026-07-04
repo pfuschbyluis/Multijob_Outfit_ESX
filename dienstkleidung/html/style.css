@@ -4,6 +4,20 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+button {
+    font-family: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:focus,
+button:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
 :root {
     --accent:       #ff5a3c;
     --accent-weak:  rgba(255, 90, 60, 0.14);
@@ -377,9 +391,17 @@ html, body {
     background: transparent;
     color: var(--text-3);
     cursor: pointer;
+    outline: none;
+    box-shadow: none;
     transition: background 0.15s, color 0.15s;
 }
 .iconbtn:hover { background: rgba(255,255,255,0.06); color: var(--text-2); }
+.iconbtn:focus,
+.iconbtn:focus-visible,
+.iconbtn:active {
+    outline: none;
+    box-shadow: none;
+}
 
 .kbd {
     display: inline-grid;
