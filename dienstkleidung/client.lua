@@ -38,6 +38,16 @@ local function ReleaseNuiFocus()
     if SetNuiFocusKeepInput then
         SetNuiFocusKeepInput(false)
     end
+
+    -- FiveM-CEF übernimmt SetNuiFocus(false) innerhalb eines NUI-Callbacks
+    -- gelegentlich nicht sofort. Deshalb im nächsten Frame erneut freigeben,
+    -- solange in der Zwischenzeit kein Menü neu geöffnet wurde.
+    CreateThread(function()
+        Wait(0)
+        if not nuiFocusActive then
+            SetNuiFocus(false, false)
+        end
+    end)
 end
 
 local function InitESX()
@@ -185,17 +195,13 @@ end
 
 local function CloseOutfitMenu()
     outfitMenuOpen = false
-    if not adminMenuOpen then
-        ReleaseNuiFocus()
-    end
+    ReleaseNuiFocus()
     SendNUIMessage({ action = 'close' })
 end
 
 local function CloseAdminPanel()
     adminMenuOpen = false
-    if not outfitMenuOpen then
-        ReleaseNuiFocus()
-    end
+    ReleaseNuiFocus()
     SendNUIMessage({ action = 'closeAdmin' })
 end
 
