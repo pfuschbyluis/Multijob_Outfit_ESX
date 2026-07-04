@@ -681,6 +681,89 @@
 .clothes-input::placeholder { color: var(--text-3); }
 
 /* ─── Ped card ───────────────────────────────────────────── */
+/* ─── Color field (Admin- & Job-Farbe) ───────────────────── */
+.color-field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.color-field__main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.color-field__picker {
+    width: 42px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.color-field__picker::-webkit-color-swatch-wrapper { padding: 3px; }
+.color-field__picker::-webkit-color-swatch { border: none; border-radius: 6px; }
+
+.color-field__hex {
+    width: 96px;
+    background: rgba(0,0,0,0.22);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 10px;
+    text-transform: uppercase;
+}
+.color-field__hex:focus { border-color: var(--accent-line); }
+
+.color-field__swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.12s, border-color 0.12s;
+}
+.color-swatch:hover { transform: scale(1.12); }
+.color-swatch.is-active {
+    border-color: var(--text);
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.4);
+}
+
+.job-color-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 16px;
+}
+
+.job-color-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 13px 14px;
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    background: rgba(0,0,0,0.14);
+}
+
+.job-color-row__name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+}
+
 /* ─── Mode switch (Peds vs. Marker) ──────────────────────── */
 .mode-switch {
     display: grid;

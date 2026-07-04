@@ -43,6 +43,16 @@ Config.RestoreClothesLabel = 'Normale Kleidung anziehen'
 -- Öffnungs-Animationen für Outfit-Menü und Admin-Panel (kann im Admin deaktiviert werden)
 Config.EnableUiAnimations = true
 
+-- Feste Akzentfarbe des Admin-Panels (unabhängig vom Job-Menü).
+-- Hex-Wert, z.B. '#ff5a3c'. Im Admin-Panel unter „Allgemein“ wählbar.
+Config.AdminColor = '#ff5a3c'
+
+-- Optionale UI-Farbe pro Job für das Outfit-Menü.
+-- Leer lassen = eingebaute Standardfarbe des Jobs. Beispiel:
+--   Config.JobColors = { police = '#3b82f6', ambulance = '#22b06d' }
+-- Im Admin-Panel unter „Jobs“ pro Job wählbar.
+Config.JobColors = {}
+
 Config.PedSettings = {
     freeze = true,
     invincible = true,

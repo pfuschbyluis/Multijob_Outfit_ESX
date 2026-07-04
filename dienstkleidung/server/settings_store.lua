@@ -30,6 +30,7 @@ NS.ADMIN_FIELDS = {
     'Debug', 'Notify', 'NotifyTitle', 'NotifyDuration', 'NotifyPosition',
     'Interaction', 'MenuType', 'ClothingSystem',
     'EnableRestoreClothes', 'RestoreClothesLabel', 'EnableUiAnimations',
+    'AdminColor', 'JobColors',
     'PedSettings', 'KeyInteract', 'Target'
 }
 
@@ -88,6 +89,27 @@ end
 function NS.SanitizeEnum(field, v, fallback)
     if type(v) == 'string' and NS.ENUMS[field] and NS.ENUMS[field][v] then return v end
     return fallback
+end
+
+-- Akzeptiert nur echte Hex-Farben (#rgb oder #rrggbb).
+function NS.SanitizeHexColor(v, fallback)
+    if type(v) == 'string' and (v:match('^#%x%x%x$') or v:match('^#%x%x%x%x%x%x$')) then
+        return v
+    end
+    return fallback
+end
+
+-- Map jobKey -> Hex-Farbe. Ungültige Einträge fallen weg.
+function NS.SanitizeJobColors(v, fallback)
+    if type(v) ~= 'table' then return fallback end
+    local out = {}
+    for jobName, color in pairs(v) do
+        if NS.IsSafeJobKey(jobName) then
+            local hex = NS.SanitizeHexColor(color, nil)
+            if hex then out[jobName] = hex end
+        end
+    end
+    return out
 end
 
 function NS.SanitizeCoords(v, fallbackCoords)
@@ -154,6 +176,8 @@ function NS.SanitizeOverrides(raw, base)
     if raw.EnableRestoreClothes ~= nil then out.EnableRestoreClothes = NS.SanitizeBool(raw.EnableRestoreClothes, base.EnableRestoreClothes) end
     if raw.RestoreClothesLabel ~= nil then out.RestoreClothesLabel = NS.SanitizeString(raw.RestoreClothesLabel, base.RestoreClothesLabel) end
     if raw.EnableUiAnimations ~= nil then out.EnableUiAnimations = NS.SanitizeBool(raw.EnableUiAnimations, base.EnableUiAnimations) end
+    if raw.AdminColor ~= nil then out.AdminColor = NS.SanitizeHexColor(raw.AdminColor, base.AdminColor) end
+    if raw.JobColors ~= nil then out.JobColors = NS.SanitizeJobColors(raw.JobColors, base.JobColors) end
     if raw.PedSettings ~= nil then out.PedSettings = NS.SanitizePedSettings(raw.PedSettings, base.PedSettings) end
     if raw.KeyInteract ~= nil then out.KeyInteract = NS.SanitizeKeyInteract(raw.KeyInteract, base.KeyInteract) end
     if raw.Target ~= nil then out.Target = NS.SanitizeTarget(raw.Target, base.Target) end

@@ -124,15 +124,22 @@ function post(name, data = {}) {
         .catch((err) => console.error('[dienstkleidung] NUI-Post FEHLGESCHLAGEN:', url, err && err.message));
 }
 
+function isValidHex(hex) {
+    return typeof hex === 'string' && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex.trim());
+}
+
 function hexToRgb(hex) {
     const h = hex.replace('#', '');
     const v = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
     return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)];
 }
 
+// Akzent nur auf das Outfit-Menü (#app) anwenden, NICHT global. Sonst würde
+// die zuletzt geöffnete Job-Farbe auch das Admin-Panel einfärben.
 function applyAccent(hex) {
+    if (!isValidHex(hex)) return;
     const [r, g, b] = hexToRgb(hex);
-    const s = document.documentElement.style;
+    const s = (app || document.documentElement).style;
     s.setProperty('--accent', hex);
     s.setProperty('--accent-weak', `rgba(${r}, ${g}, ${b}, 0.14)`);
     s.setProperty('--accent-mid',  `rgba(${r}, ${g}, ${b}, 0.24)`);
@@ -176,7 +183,8 @@ function makeItem({ icon, label, sub, extraClass = '', onClick, index = 0, chevI
 function render(data) {
     const job = resolveJob(data.job) || resolveJob(data.jobLabel) || FALLBACK_JOB;
 
-    applyAccent(job.accent);
+    // Vom Server konfigurierte Job-Farbe hat Vorrang vor der eingebauten Palette.
+    applyAccent(isValidHex(data.accent) ? data.accent.trim() : job.accent);
 
     eyebrow.textContent = data.title || 'Dienstkleidung';
     title.textContent = job.name || data.jobLabel || data.title || 'Dienstkleidung';

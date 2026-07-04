@@ -108,6 +108,9 @@ local function OpenCustomMenu(jobName)
         }
     end
 
+    local jobColors = Config.JobColors or {}
+    local accent = jobColors[jobName] or jobColors[realJobName]
+
     JobOutfit.Debug(('Outfit-Menü öffnen (job=%s, outfits=%d)'):format(tostring(jobName), #nuiOutfits), 'MENU')
     s.outfitMenuOpen = true
     JobOutfit.SetNuiOpen(true, 'OpenCustomMenu')
@@ -118,6 +121,7 @@ local function OpenCustomMenu(jobName)
         title = 'Dienstkleidung',
         job = jobName,
         jobLabel = realJobName,
+        accent = accent,
         grade = grade,
         restoreEnabled = Config.EnableRestoreClothes,
         restoreAvailable = s.savedCivilianSkin ~= nil,

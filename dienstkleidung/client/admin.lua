@@ -6,6 +6,7 @@ local ADMIN_SYNC_FIELDS = {
     'Debug', 'Notify', 'NotifyTitle', 'NotifyDuration', 'NotifyPosition',
     'Interaction', 'MenuType', 'ClothingSystem',
     'EnableRestoreClothes', 'RestoreClothesLabel', 'EnableUiAnimations',
+    'AdminColor', 'JobColors',
     'AllowedJobs', 'JobPeds', 'PedSettings', 'KeyInteract', 'Target'
 }
 
@@ -21,6 +22,8 @@ local ADMIN_FIELD_TYPES = {
     EnableRestoreClothes = 'boolean',
     RestoreClothesLabel = 'string',
     EnableUiAnimations = 'boolean',
+    AdminColor = 'string',
+    JobColors = 'table',
     AllowedJobs = 'table',
     JobPeds = 'table',
     PedSettings = 'table',

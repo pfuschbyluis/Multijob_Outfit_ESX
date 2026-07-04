@@ -82,6 +82,67 @@
     let activeTab = 'general';
     let pendingAddPedJob = null;
 
+    const DEFAULT_ADMIN_COLOR = '#ff5a3c';
+
+    // Auswahl-Presets für Admin-Panel und Job-Farben.
+    const COLOR_PRESETS = [
+        '#ff5a3c', '#f2922d', '#e6c12e', '#22b06d',
+        '#15bcc8', '#3b82f6', '#7c6cf6', '#f0556a'
+    ];
+
+    // Eingebaute Standardfarben pro Job (Spiegel der Palette aus script.js),
+    // damit der Farbwähler pro Job sinnvoll vorbelegt ist.
+    const JOB_COLOR_DEFAULTS = {
+        fire: '#ff5a3c', police: '#3b82f6', ambulance: '#22b06d',
+        bka: '#7c6cf6', uke: '#15bcc8', ils: '#f0a23a',
+        mechanic: '#f2922d', stadtwerke: '#e6c12e'
+    };
+
+    function isValidHex(hex) {
+        return typeof hex === 'string' && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex.trim());
+    }
+
+    function hexToRgb(hex) {
+        const h = hex.replace('#', '');
+        const v = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+        return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)];
+    }
+
+    // Feste Admin-Panel-Farbe – nur auf das Admin-Panel (#adminApp) scopen,
+    // damit sie unabhängig von den Job-Farben des Outfit-Menüs bleibt.
+    function applyAdminColor(hex) {
+        const color = isValidHex(hex) ? hex.trim() : DEFAULT_ADMIN_COLOR;
+        const [r, g, b] = hexToRgb(color);
+        const s = app.style;
+        s.setProperty('--accent', color);
+        s.setProperty('--accent-weak', `rgba(${r}, ${g}, ${b}, 0.14)`);
+        s.setProperty('--accent-mid', `rgba(${r}, ${g}, ${b}, 0.24)`);
+        s.setProperty('--accent-line', `rgba(${r}, ${g}, ${b}, 0.55)`);
+    }
+
+    function jobDefaultColor(key) {
+        return JOB_COLOR_DEFAULTS[String(key || '').toLowerCase()] || '#4d8df0';
+    }
+
+    // Aktualisiert die zusammengehörigen Eingaben (Picker, Hex, Presets) eines
+    // Farbwählers, ohne die ganze Ansicht neu zu rendern (Fokus bleibt erhalten).
+    function syncColorField(path, value, exclude) {
+        const wrap = body.querySelector(`[data-color-wrap="${CSS.escape(path)}"]`);
+        if (!wrap) return;
+        const picker = wrap.querySelector('[data-color-input]');
+        const hex = wrap.querySelector('[data-color-hex]');
+        if (picker && picker !== exclude && isValidHex(value)) picker.value = value;
+        if (hex && hex !== exclude) hex.value = value;
+        wrap.querySelectorAll('.color-swatch').forEach(sw => {
+            sw.classList.toggle('is-active', sw.dataset.colorValue.toLowerCase() === String(value).toLowerCase());
+        });
+    }
+
+    function setColorAtPath(path, value) {
+        setPath(state, path, value);
+        if (path === 'AdminColor') applyAdminColor(value);
+    }
+
     // Muss exakt zu componentSlots/propSlots in client.lua passen.
     const CLOTHES_SLOTS = [
         { key: 'mask', label: 'Maske' },
@@ -199,6 +260,25 @@
         </div>`;
     }
 
+    // Farbwähler: native Farb-Vorschau + Hex-Eingabe + Presets. `path` zeigt
+    // auf den State-Pfad (z.B. 'AdminColor' oder 'JobColors.police').
+    function colorField(path, current, fallback) {
+        const value = isValidHex(current) ? current : fallback;
+        const safePath = escapeAttr(path);
+        const swatches = COLOR_PRESETS.map(c => `
+            <button type="button" class="color-swatch ${c.toLowerCase() === String(value).toLowerCase() ? 'is-active' : ''}"
+                data-color-path="${safePath}" data-color-value="${c}" style="background:${c}" title="${c}"></button>
+        `).join('');
+        return `
+        <div class="color-field" data-color-wrap="${safePath}">
+            <div class="color-field__main">
+                <input type="color" class="color-field__picker" data-color-input="${safePath}" value="${escapeAttr(value)}">
+                <input type="text" class="color-field__hex" data-color-hex="${safePath}" value="${escapeAttr(value)}" maxlength="7" spellcheck="false">
+            </div>
+            <div class="color-field__swatches">${swatches}</div>
+        </div>`;
+    }
+
     // Native <select>-Popups werden von FiveMs CEF teils komplett weiß/ungestylt
     // dargestellt (bekannte Einschränkung). Deshalb ein eigenes, voll gestyltes
     // Dropdown statt <select>/<option>.
@@ -260,6 +340,13 @@
             <div class="admin-grid admin-grid--single">
                 ${checkboxField('f_anim', 'EnableUiAnimations', 'Öffnungs-Animationen (Outfit-Menü & Admin-Panel)', s.EnableUiAnimations !== false)}
                 <p class="help-text">Deaktivieren für sofortiges Öffnen ohne Slide/Fade – hilfreich bei empfindlichen Spielern oder schwächeren PCs.</p>
+            </div>
+            <div class="admin-grid admin-grid--single">
+                <div class="field">
+                    <label>Admin-Panel-Farbe</label>
+                    ${colorField('AdminColor', s.AdminColor, DEFAULT_ADMIN_COLOR)}
+                    <p class="help-text">Feste Farbe des Admin-Panels für alle Admins – unabhängig von den Job-Farben des Outfit-Menüs.</p>
+                </div>
             </div>
         </div>`);
     }
@@ -361,6 +448,16 @@
             </label>`;
         }).join('');
 
+        const colorRows = jobKeys.map(k => {
+            const safeKey = escapeAttr(k);
+            const current = s.JobColors && s.JobColors[k];
+            return `
+            <div class="job-color-row">
+                <span class="job-color-row__name">${escapeAttr(capitalize(k))}</span>
+                ${colorField('JobColors.' + safeKey, current, jobDefaultColor(k))}
+            </div>`;
+        }).join('');
+
         return wrapTab(`
         <div class="admin-section">
             <div class="admin-section__title">Erlaubte Jobs</div>
@@ -369,6 +466,11 @@
                 Jobs mit „nicht konfiguriert“ haben nur leere Platzhalter-Outfits in config.lua – dort fehlt noch die eigentliche Kleidung.
             </p>
             <div class="job-toggle-grid">${allowedHtml || '<div class="empty-state">Keine Jobs mit hinterlegten Outfits gefunden.</div>'}</div>
+        </div>
+        <div class="admin-section">
+            <div class="admin-section__title">Job-Farben (Outfit-Menü)</div>
+            <p class="help-text">Lege pro Job fest, welche Akzentfarbe das Outfit-Menü für diesen Job verwendet. Ohne Auswahl gilt die eingebaute Standardfarbe.</p>
+            <div class="job-color-list">${colorRows || '<div class="empty-state">Keine Jobs gefunden.</div>'}</div>
         </div>`);
     }
 
@@ -640,6 +742,23 @@
             return;
         }
 
+        if (el.dataset && el.dataset.colorInput) {
+            const path = el.dataset.colorInput;
+            setColorAtPath(path, el.value);
+            syncColorField(path, el.value, el);
+            return;
+        }
+
+        if (el.dataset && el.dataset.colorHex) {
+            const path = el.dataset.colorHex;
+            const raw = el.value.trim();
+            if (isValidHex(raw)) {
+                setColorAtPath(path, raw);
+                syncColorField(path, raw, el);
+            }
+            return;
+        }
+
         if (!el.dataset || !el.dataset.path) return;
         if (el.tagName === 'SELECT') return; // handled on change
         setPath(state, el.dataset.path, readInputValue(el));
@@ -703,6 +822,15 @@
             }
 
             render();
+            return;
+        }
+
+        const swatch = e.target.closest && e.target.closest('[data-color-value]');
+        if (swatch) {
+            const path = swatch.dataset.colorPath;
+            const value = swatch.dataset.colorValue;
+            setColorAtPath(path, value);
+            syncColorField(path, value, null);
             return;
         }
 
@@ -992,6 +1120,9 @@
         state = JSON.parse(JSON.stringify(data.settings || {}));
         if (state.EnableUiAnimations === undefined) state.EnableUiAnimations = true;
         applyUiAnimations(state.EnableUiAnimations !== false);
+        if (!isValidHex(state.AdminColor)) state.AdminColor = DEFAULT_ADMIN_COLOR;
+        state.JobColors = (state.JobColors && typeof state.JobColors === 'object') ? state.JobColors : {};
+        applyAdminColor(state.AdminColor);
         state.AllowedJobs = state.AllowedJobs || {};
         state.JobPeds = state.JobPeds || {};
         state.PedSettings = state.PedSettings || { freeze: true, invincible: true, blockEvents: true, displayMode: 'peds', showBlip: false, markerDrawDistance: 30 };
