@@ -1143,8 +1143,8 @@
     color: var(--text-2);
 }
 
-/* Tab body animation */
-.admin__body > * {
+/* Tab body animation – nur beim Tab-Wechsel (.is-entering), nicht bei jedem Render */
+.tab-page.is-entering {
     animation: tabIn 0.2s ease both;
 }
 
@@ -1155,7 +1155,7 @@
 
 /* Animationen global deaktivierbar (Admin: Darstellung) */
 .ui-animations-off .admin__panel,
-.ui-animations-off .admin__body > *,
+.ui-animations-off .tab-page.is-entering,
 .ui-animations-off .menu,
 .ui-animations-off .item,
 .ui-animations-off .notify {

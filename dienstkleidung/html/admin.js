@@ -748,12 +748,29 @@
         adminFoot.classList.toggle('is-outfits-mode', activeTab === 'outfits');
     }
 
+    function removeJobFromState(key) {
+        jobKeys = jobKeys.filter(j => j !== key);
+        if (state && state.AllowedJobs) delete state.AllowedJobs[key];
+        if (state && state.JobPeds) delete state.JobPeds[key];
+        if (state && state.JobColors) delete state.JobColors[key];
+        if (jobLabels) delete jobLabels[key];
+        if (configuredJobs) delete configuredJobs[key];
+    }
+
     function applyUiAnimations(enabled) {
         document.documentElement.classList.toggle('ui-animations-off', enabled === false);
     }
 
-    function render() {
+    // animate: nur beim Tab-Wechsel / erstes Öffnen – sonst wackelt die UI bei
+    // jedem Löschen, Speichern oder Dropdown-Klick neu ein.
+    function render(opts) {
+        opts = opts || {};
+        const animate = opts.animate === true;
+        const preserveScroll = opts.preserveScroll !== false;
+
         if (!state) return;
+
+        const scrollTop = preserveScroll ? body.scrollTop : 0;
 
         applyUiAnimations(state.EnableUiAnimations !== false);
 
@@ -770,6 +787,14 @@
         };
 
         body.innerHTML = (renderers[activeTab] || renderGeneral)(state);
+
+        const page = body.querySelector('.tab-page');
+        if (page && animate && state.EnableUiAnimations !== false) {
+            page.classList.add('is-entering');
+            page.addEventListener('animationend', () => page.classList.remove('is-entering'), { once: true });
+        }
+
+        if (preserveScroll) body.scrollTop = scrollTop;
 
         if (saveErrorMessage) {
             const banner = document.createElement('div');
@@ -879,7 +904,7 @@
             if (path === '__addPedJob') {
                 pendingAddPedJob = value;
             } else if (path === '__outfitsJob') {
-                fetchOutfitsList(value);
+                fetchOutfitsList(value, { silent: true });
             } else if (path === 'Interaction' && value === 'ox_target' && isMarkerMode(state)) {
                 // Marker brauchen die Text-UI – ox_target hier blockieren.
                 render();
@@ -898,13 +923,8 @@
             const key = deleteJobBtn.getAttribute('data-delete-job');
             if (key) {
                 post('admin:deleteJob', { job: key });
-                jobKeys = jobKeys.filter(j => j !== key);
-                if (state.AllowedJobs) delete state.AllowedJobs[key];
-                if (state.JobPeds) delete state.JobPeds[key];
-                if (state.JobColors) delete state.JobColors[key];
-                if (jobLabels) delete jobLabels[key];
-                if (configuredJobs) delete configuredJobs[key];
-                render();
+                removeJobFromState(key);
+                render({ animate: false, preserveScroll: true });
             }
             return;
         }
@@ -1064,23 +1084,29 @@
             .catch((err) => console.error('[dienstkleidung:admin] Position konnte nicht abgerufen werden:', err));
     }
 
-    function fetchOutfitsList(jobName) {
+    function fetchOutfitsList(jobName, opts) {
+        opts = opts || {};
+        const silent = opts.silent === true;
+        const animate = opts.animate === true;
+
         outfitsUi.selectedJob = jobName || null;
 
         if (!jobName) {
             outfitsUi.list = [];
             outfitsUi.loading = false;
-            render();
+            render({ animate, preserveScroll: !animate });
             return;
         }
 
-        outfitsUi.loading = true;
-        render();
+        if (!silent) {
+            outfitsUi.loading = true;
+            render({ animate: false, preserveScroll: true });
+        }
 
         if (!IN_FIVEM) {
             outfitsUi.list = [];
             outfitsUi.loading = false;
-            render();
+            render({ animate, preserveScroll: true });
             return;
         }
 
@@ -1093,13 +1119,13 @@
             .then(list => {
                 outfitsUi.list = Array.isArray(list) ? list : [];
                 outfitsUi.loading = false;
-                render();
+                render({ animate, preserveScroll: true });
             })
             .catch((err) => {
                 console.error('[dienstkleidung:admin] Outfits konnten nicht geladen werden:', err);
                 outfitsUi.list = [];
                 outfitsUi.loading = false;
-                render();
+                render({ animate: false, preserveScroll: true });
             });
     }
 
@@ -1110,11 +1136,11 @@
 
         if (activeTab === 'outfits') {
             outfitsUi.editing = null;
-            fetchOutfitsList(outfitsUi.selectedJob || jobKeys[0] || null);
+            fetchOutfitsList(outfitsUi.selectedJob || jobKeys[0] || null, { animate: true });
             return;
         }
 
-        render();
+        render({ animate: true, preserveScroll: false });
     });
 
     let savePending = false;
@@ -1191,7 +1217,7 @@
 
         if (data.action === 'outfitsSaved') {
             outfitsUi.editing = null;
-            if (activeTab === 'outfits') fetchOutfitsList(outfitsUi.selectedJob);
+            if (activeTab === 'outfits') fetchOutfitsList(outfitsUi.selectedJob, { silent: true });
             return;
         }
 
@@ -1203,14 +1229,11 @@
 
         if (data.action === 'adminJobDeleted') {
             const key = data.job;
-            if (key && state) {
-                jobKeys = jobKeys.filter(j => j !== key);
-                if (state.AllowedJobs) delete state.AllowedJobs[key];
-                if (state.JobPeds) delete state.JobPeds[key];
-                if (state.JobColors) delete state.JobColors[key];
-                if (jobLabels) delete jobLabels[key];
-                if (configuredJobs) delete configuredJobs[key];
-                if (!app.classList.contains('hidden')) render();
+            // Optimistisches Löschen im Klick-Handler hat den Job oft schon entfernt –
+            // kein zweites Render, sonst wackelt die UI nochmal.
+            if (key && state && jobKeys.includes(key)) {
+                removeJobFromState(key);
+                if (!app.classList.contains('hidden')) render({ animate: false, preserveScroll: true });
             }
             return;
         }
@@ -1259,7 +1282,7 @@
         activeTab = 'general';
         app.classList.remove('hidden');
         try {
-            render();
+            render({ animate: true });
         } catch (err) {
             console.error('[dienstkleidung] Admin-Render-Fehler:', err);
         }
