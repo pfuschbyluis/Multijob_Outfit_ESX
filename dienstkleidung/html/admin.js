@@ -523,10 +523,17 @@
             </div>
         </div>`;
 
+        const usesTarget = s.Interaction === 'ox_target';
+        const infoSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
+        const interactionInfo = usesTarget
+            ? `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>ox_target</strong>: An jedem Marker wird automatisch eine unsichtbare Ziel-Zone erstellt – Spieler schauen den Marker an und wählen die Option. Alternativ kannst du unter <strong>Interaktion</strong> auf <strong>Tastendruck</strong> umstellen, dann öffnet sich das Menü per Taste in der Nähe.</span></div>`
+            : `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>Tastendruck</strong>: Spieler öffnen das Menü mit der eingestellten Taste, sobald sie nah am Marker stehen.</span></div>`;
+
         const markerSettingsSection = markerMode ? `
         <div class="admin-section">
             <div class="admin-section__title">Marker-Einstellungen</div>
             <p class="help-text">Im Marker-Modus werden keine NPCs gespawnt – nur Boden-Marker an den hinterlegten Positionen.</p>
+            ${interactionInfo}
             <div class="admin-grid">
                 ${checkboxField('ped_blip', 'PedSettings.showBlip', 'Karten-Blips für Marker-Positionen', s.PedSettings.showBlip)}
                 <div class="field">
