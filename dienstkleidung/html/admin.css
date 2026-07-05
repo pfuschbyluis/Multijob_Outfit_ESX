@@ -415,11 +415,11 @@
 
 .xselect__trigger {
     width: 100%;
-    text-align: left;
+    text-align: center;
     background: rgba(0,0,0,0.22);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 10px 36px 10px 12px;
+    padding: 10px 36px;
     color: var(--text);
     font-size: 13.5px;
     font-family: inherit;
@@ -478,7 +478,7 @@
 
 .xselect__option {
     width: 100%;
-    text-align: left;
+    text-align: center;
     background: transparent;
     border: 0;
     border-radius: 8px;

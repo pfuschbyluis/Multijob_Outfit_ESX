@@ -17,7 +17,7 @@
 -- `JobOutfitServer` an (Ladereihenfolge steht in fxmanifest.lua).
 
 JobOutfitServer = JobOutfitServer or {}
-JobOutfitServer.Cache = { Jobs = {}, Peds = {}, Outfits = {} }
+JobOutfitServer.Cache = { Jobs = {}, Peds = {}, Outfits = {}, ValidJobs = {} }
 
 local NS = JobOutfitServer
 

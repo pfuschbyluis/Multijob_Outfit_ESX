@@ -97,6 +97,11 @@ RegisterNetEvent('job_outfit:admin:outfits:save', function(data)
         return
     end
 
+    if not NS.IsRealJob(data.jobName) then
+        TriggerClientEvent('job_outfit:admin:outfits:saveError', src, ('Job "%s" existiert nicht in der Datenbank'):format(tostring(data.jobName)))
+        return
+    end
+
     local grade = tonumber(data.grade)
     local label = NS.SanitizeString(data.label, nil)
 

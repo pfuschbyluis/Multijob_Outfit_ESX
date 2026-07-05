@@ -23,6 +23,9 @@ local function ValidateSettings(data)
             if type(ped) ~= 'table' then
                 return false, ('Ped-Eintrag für "%s" ist ungültig'):format(tostring(jobName))
             end
+            if not NS.IsRealJob(jobName) then
+                return false, ('Job "%s" existiert nicht in der Datenbank'):format(tostring(jobName))
+            end
             if not markerMode and (type(ped.model) ~= 'string' or ped.model == '') then
                 return false, ('Ped-Eintrag für "%s" ist unvollständig (Model fehlt)'):format(tostring(jobName))
             end
@@ -63,23 +66,32 @@ RegisterNetEvent('job_outfit:admin:openRequest', function()
         return
     end
 
-    -- jobKeys = alle Jobs, die irgendwo bekannt sind (Jobs-Tabelle, Peds oder
-    -- Outfits) - so tauchen auch Jobs auf, die z.B. nur Outfits aber noch
-    -- keinen Ped haben.
+    -- Frische Jobliste ziehen, damit neu angelegte ESX-Jobs sofort auftauchen.
+    NS.ReloadValidJobs()
+
+    -- jobKeys = auswählbare Jobs. Gibt es eine echte Jobliste (ESX-`jobs`-
+    -- Tabelle), sind nur diese Jobs auswählbar – so kann man keine Job-Namen
+    -- frei erfinden. Bereits konfigurierte Jobs bleiben sichtbar (damit man sie
+    -- weiter verwalten/entfernen kann), auch wenn sie nicht mehr existieren.
     local jobKeySet = {}
+    if NS.HasValidJobList() then
+        for key in pairs(NS.Cache.ValidJobs) do jobKeySet[key] = true end
+    end
     for key in pairs(NS.Cache.Jobs) do jobKeySet[key] = true end
     for key in pairs(NS.Cache.Peds) do jobKeySet[key] = true end
     for key in pairs(NS.Cache.Outfits) do jobKeySet[key] = true end
 
     local jobKeys = {}
     local configuredJobs = {}
+    local jobLabels = {}
     for key in pairs(jobKeySet) do
         jobKeys[#jobKeys + 1] = key
         configuredJobs[key] = NS.JobHasUsableOutfits(key)
+        jobLabels[key] = NS.Cache.ValidJobs[key]
     end
     table.sort(jobKeys)
 
-    TriggerClientEvent('job_outfit:admin:openPanel', src, BuildClientSettings(), jobKeys, configuredJobs)
+    TriggerClientEvent('job_outfit:admin:openPanel', src, BuildClientSettings(), jobKeys, configuredJobs, jobLabels)
 end)
 
 RegisterNetEvent('job_outfit:admin:save', function(newSettings)

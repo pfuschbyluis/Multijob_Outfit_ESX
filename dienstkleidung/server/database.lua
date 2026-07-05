@@ -189,7 +189,41 @@ function NS.ReloadOutfitsCache()
     NS.Cache.Outfits = out
 end
 
+-- Lädt die "echten" Jobs aus der ESX-Datenbanktabelle `jobs`. Dient als
+-- Whitelist: im Admin-Panel lassen sich nur Jobs anlegen, die es wirklich
+-- gibt – keine frei erfundenen Job-Namen mehr.
+function NS.ReloadValidJobs()
+    local out = {}
+    local ok, rows = pcall(function()
+        return MySQL.query.await('SELECT `name`, `label` FROM `jobs`')
+    end)
+
+    if ok and type(rows) == 'table' then
+        for _, row in ipairs(rows) do
+            if NS.IsSafeJobKey(row.name) then
+                out[row.name] = row.label or row.name
+            end
+        end
+    else
+        print('[job_outfit] ESX-`jobs`-Tabelle nicht lesbar – Job-Beschränkung inaktiv (alle bekannten Jobs bleiben nutzbar).')
+    end
+
+    NS.Cache.ValidJobs = out
+end
+
+-- true, wenn eine echte Jobliste geladen werden konnte. Nur dann wird
+-- eingeschränkt; ohne Liste (z.B. andere DB-Struktur) bleibt alles nutzbar.
+function NS.HasValidJobList()
+    return NS.Cache.ValidJobs ~= nil and next(NS.Cache.ValidJobs) ~= nil
+end
+
+function NS.IsRealJob(jobName)
+    if not NS.HasValidJobList() then return true end
+    return NS.Cache.ValidJobs[jobName] ~= nil
+end
+
 function NS.ReloadAllCaches()
+    NS.ReloadValidJobs()
     NS.ReloadJobsCache()
     NS.ReloadPedsCache()
     NS.ReloadOutfitsCache()

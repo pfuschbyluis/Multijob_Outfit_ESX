@@ -78,7 +78,7 @@ RegisterNetEvent('job_outfit:admin:saveError', function(reason)
     JobOutfit.Notify('Speichern fehlgeschlagen: ' .. tostring(reason or 'unbekannter Fehler'), 'error')
 end)
 
-RegisterNetEvent('job_outfit:admin:openPanel', function(settings, jobKeys, configuredJobs)
+RegisterNetEvent('job_outfit:admin:openPanel', function(settings, jobKeys, configuredJobs, jobLabels)
     JobOutfit.Debug('Server-Event: openPanel', 'ADMIN')
     JobOutfit.State.adminMenuOpen = true
     JobOutfit.SetNuiOpen(true, 'openPanel')
@@ -88,7 +88,8 @@ RegisterNetEvent('job_outfit:admin:openPanel', function(settings, jobKeys, confi
         debug = JobOutfit.IsDebug(),
         settings = settings,
         jobKeys = jobKeys or {},
-        configuredJobs = configuredJobs or {}
+        configuredJobs = configuredJobs or {},
+        jobLabels = jobLabels or {}
     })
 end)
 

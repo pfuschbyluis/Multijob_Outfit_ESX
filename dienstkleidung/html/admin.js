@@ -79,8 +79,15 @@
     let state = null;
     let jobKeys = [];
     let configuredJobs = {};
+    let jobLabels = {};
     let activeTab = 'general';
     let pendingAddPedJob = null;
+
+    // Zeigt den echten Job-Namen (Label aus der DB), sonst der Schlüssel großgeschrieben.
+    function jobLabel(key) {
+        const label = jobLabels && jobLabels[key];
+        return (typeof label === 'string' && label !== '') ? label : capitalize(key);
+    }
 
     const DEFAULT_ADMIN_COLOR = '#ff5a3c';
 
@@ -397,7 +404,7 @@
     function pedCard(key, ped, s) {
         const c = ped.coords || { x: 0, y: 0, z: 0, w: 0 };
         const safeKey = escapeAttr(key);
-        const safeLabelKey = escapeAttr(capitalize(key));
+        const safeLabelKey = escapeAttr(jobLabel(key));
         const markerMode = isMarkerMode(s);
         const modelFields = markerMode ? '' : `
             <div class="admin-grid">
@@ -455,7 +462,7 @@
             <label class="job-toggle ${isConfigured ? '' : 'is-unconfigured'}">
                 <div class="job-toggle__top">
                     <input type="checkbox" data-path="AllowedJobs.${safeKey}" ${s.AllowedJobs[k] ? 'checked' : ''}>
-                    <span class="job-toggle__name">${escapeAttr(capitalize(k))}</span>
+                    <span class="job-toggle__name">${escapeAttr(jobLabel(k))}</span>
                 </div>
                 ${isConfigured ? '' : '<span class="job-badge-warn" title="Für diesen Job sind keine Kleidungsdaten hinterlegt">Nicht konfiguriert</span>'}
             </label>`;
@@ -466,7 +473,7 @@
             const current = s.JobColors && s.JobColors[k];
             return `
             <div class="job-color-row">
-                <span class="job-color-row__name">${escapeAttr(capitalize(k))}</span>
+                <span class="job-color-row__name">${escapeAttr(jobLabel(k))}</span>
                 ${colorField('JobColors.' + safeKey, current, jobDefaultColor(k))}
             </div>`;
         }).join('');
@@ -501,7 +508,7 @@
                     '__addPedJob',
                     availableForAdd,
                     availableForAdd.includes(pendingAddPedJob) ? pendingAddPedJob : availableForAdd[0],
-                    availableForAdd.map(capitalize)
+                    availableForAdd.map(jobLabel)
                 )}
                 <button type="button" class="btn" id="addPedBtn">+ ${modeTerm(s, 'one')}-Standort hinzufügen</button>
             </div>` : '';
@@ -630,7 +637,7 @@
     function outfitEditor(outfit) {
         return wrapTab(`
         <div class="admin-section">
-            <div class="admin-section__title">${outfit.id ? 'Outfit bearbeiten' : 'Neues Outfit'} — ${escapeAttr(capitalize(outfitsUi.selectedJob))}</div>
+            <div class="admin-section__title">${outfit.id ? 'Outfit bearbeiten' : 'Neues Outfit'} — ${escapeAttr(jobLabel(outfitsUi.selectedJob))}</div>
             <div class="admin-grid">
                 <div class="field"><label>Rang (Grade-Nummer)</label><input type="number" data-outfit-field="grade" value="${outfit.grade}"></div>
                 <div class="field span-2"><label>Bezeichnung</label><input type="text" data-outfit-field="label" value="${escapeAttr(outfit.label)}"></div>
@@ -684,7 +691,7 @@
             <div class="admin-grid admin-grid--single">
                 <div class="field">
                     <label>Job</label>
-                    ${jobKeys.length ? customSelect('__outfitsJob', jobKeys, selectedJob, jobKeys.map(capitalize)) : '<div class="empty-state">Keine Jobs bekannt.</div>'}
+                    ${jobKeys.length ? customSelect('__outfitsJob', jobKeys, selectedJob, jobKeys.map(jobLabel)) : '<div class="empty-state">Keine Jobs bekannt.</div>'}
                 </div>
             </div>
             <div class="outfit-list">${rows}</div>
@@ -887,7 +894,7 @@
                 model: '',
                 coords: { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
                 scenario: '',
-                label: `[E] ${capitalize(key)} Outfit-Menü öffnen`
+                label: `[E] ${jobLabel(key)} Outfit-Menü öffnen`
             };
             pendingAddPedJob = null;
             render();
@@ -1160,6 +1167,7 @@
             }
         });
         configuredJobs = data.configuredJobs || {};
+        jobLabels = data.jobLabels || {};
         pendingAddPedJob = null;
         outfitsUi = { selectedJob: jobKeys[0] || null, list: [], loading: false, editing: null };
 
