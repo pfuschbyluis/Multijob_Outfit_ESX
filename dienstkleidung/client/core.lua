@@ -17,6 +17,7 @@ JobOutfit.State = {
 
     spawnedPeds = {},
     pedsSpawned = false,
+    settingsSynced = false, -- erst true nach erstem Server-Sync (Jobs/Peds aus DB)
 
     savedCivilianSkin = nil,
     isWearingJobOutfit = false,

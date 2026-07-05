@@ -29,6 +29,14 @@ local function EnsureTables()
     ]])
 
     MySQL.query.await([[
+        CREATE TABLE IF NOT EXISTS `multijob_outfit_meta` (
+            `meta_key` VARCHAR(64) NOT NULL,
+            `meta_value` VARCHAR(255) NOT NULL,
+            PRIMARY KEY (`meta_key`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ]])
+
+    MySQL.query.await([[
         CREATE TABLE IF NOT EXISTS `multijob_outfit_outfits` (
             `id` INT NOT NULL AUTO_INCREMENT,
             `job_name` VARCHAR(50) NOT NULL,
@@ -73,23 +81,42 @@ local function LoadSeedData()
     return seed
 end
 
--- Läuft nur, solange die Jobs-Tabelle komplett leer ist (= frischer Umstieg
--- von config.lua auf die Datenbank). Importiert die alten, hart im Script
--- hinterlegten Daten aus db_seed.lua einmalig. Danach ist die Datenbank die
--- alleinige Quelle der Wahrheit; diese Funktion tut ab dann nichts mehr.
+local META_LEGACY_SEED = 'legacy_seed_imported'
+
+function NS.GetMeta(key)
+    local value = MySQL.scalar.await('SELECT meta_value FROM `multijob_outfit_meta` WHERE meta_key = ? LIMIT 1', { key })
+    return value
+end
+
+function NS.SetMeta(key, value)
+    MySQL.query.await(
+        'INSERT INTO `multijob_outfit_meta` (meta_key, meta_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE meta_value = VALUES(meta_value)',
+        { key, tostring(value) }
+    )
+end
+
+-- Läuft höchstens einmal überhaupt: danach steht legacy_seed_imported in der DB.
+-- Beim normalen Resource-Restart wird die Datenbank NUR gelesen, nie wieder
+-- mit db_seed.lua befüllt – auch nicht, wenn die Tabellen später leer sind.
 local function RunFirstTimeMigration()
+    if NS.GetMeta(META_LEGACY_SEED) == '1' then
+        return
+    end
+
     local count = MySQL.scalar.await('SELECT COUNT(*) FROM `multijob_outfit_jobs`')
     if tonumber(count) and tonumber(count) > 0 then
+        NS.SetMeta(META_LEGACY_SEED, '1')
         return
     end
 
     local seed = LoadSeedData()
     if not seed then
         print('[job_outfit] Keine db_seed.lua gefunden oder leer - Datenbank bleibt leer. Bitte Jobs/Peds/Outfits über /outfitadmin anlegen.')
+        NS.SetMeta(META_LEGACY_SEED, '1')
         return
     end
 
-    print('[job_outfit] Erststart erkannt: importiere Legacy-Daten aus db_seed.lua in die Datenbank ...')
+    print('[job_outfit] Erstinstallation: importiere Legacy-Daten aus db_seed.lua einmalig in die Datenbank ...')
 
     local jobCount = 0
     for jobName, enabled in pairs(seed.AllowedJobs or {}) do
@@ -141,6 +168,7 @@ local function RunFirstTimeMigration()
     end
 
     print(('[job_outfit] Migration abgeschlossen: %d Jobs, %d Peds, %d Outfits importiert.'):format(jobCount, pedCount, outfitCount))
+    NS.SetMeta(META_LEGACY_SEED, '1')
 end
 
 function NS.ReloadJobsCache()
@@ -244,6 +272,8 @@ function NS.JobHasUsableOutfits(jobName)
     return false
 end
 
+NS.DbReady = false
+
 CreateThread(function()
     EnsureTables()
     RunFirstTimeMigration()
@@ -252,12 +282,6 @@ CreateThread(function()
     Config.AllowedJobs = NS.Cache.Jobs
     Config.JobPeds = NS.Cache.Peds
 
-    print('[job_outfit] Datenbank geladen: Jobs/Peds/Outfits sind bereit.')
-
-    -- Falls schon Spieler verbunden waren, bevor die DB fertig geladen war,
-    -- bekommen sie hier noch einen aktuellen Sync nachgeliefert.
-    TriggerClientEvent('job_outfit:admin:sync', -1, {
-        AllowedJobs = NS.DeepCopy(Config.AllowedJobs),
-        JobPeds = NS.DeepCopy(Config.JobPeds)
-    })
+    NS.DbReady = true
+    print('[job_outfit] Datenbank gelesen: Jobs/Peds/Outfits bereit (kein Schreibzugriff beim Restart).')
 end)

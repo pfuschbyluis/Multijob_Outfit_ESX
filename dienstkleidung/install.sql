@@ -28,6 +28,12 @@ CREATE TABLE IF NOT EXISTS `multijob_outfit_peds` (
 -- male_clothes/female_clothes speichern die Kleidungs-Slots (mask_1, torso_1, ...)
 -- als JSON-String. LONGTEXT statt nativem JSON-Typ für maximale Kompatibilität
 -- mit älteren MySQL/MariaDB-Versionen.
+CREATE TABLE IF NOT EXISTS `multijob_outfit_meta` (
+    `meta_key` VARCHAR(64) NOT NULL,
+    `meta_value` VARCHAR(255) NOT NULL,
+    PRIMARY KEY (`meta_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS `multijob_outfit_outfits` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `job_name` VARCHAR(50) NOT NULL,

@@ -328,6 +328,12 @@ CreateThread(function()
     end
 
     JobOutfit.Clothing.SaveCurrent()
+
+    -- Erst spawnen, wenn der Server Jobs/Peds aus der DB geschickt hat.
+    while not JobOutfit.State.settingsSynced do
+        Wait(100)
+    end
+
     JobOutfit.Peds.SpawnAll()
 
     while true do

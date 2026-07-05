@@ -53,9 +53,22 @@ local function BuildClientSettings()
     return out
 end
 
+local function SendClientSync(target)
+    TriggerClientEvent('job_outfit:admin:sync', target, BuildClientSettings())
+end
+
 RegisterNetEvent('job_outfit:admin:requestSync', function()
     local src = source
-    TriggerClientEvent('job_outfit:admin:sync', src, BuildClientSettings())
+
+    if not NS.DbReady then
+        CreateThread(function()
+            while not NS.DbReady do Wait(50) end
+            SendClientSync(src)
+        end)
+        return
+    end
+
+    SendClientSync(src)
 end)
 
 RegisterNetEvent('job_outfit:admin:openRequest', function()

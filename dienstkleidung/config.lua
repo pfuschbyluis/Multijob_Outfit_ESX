@@ -102,7 +102,6 @@ Config.JobPeds = {}
 -- verwalten: Jobs an/ausschalten, Outfit-Peds platzieren, Outfits (Kleidung)
 -- pro Job und Rang anlegen/bearbeiten/löschen.
 --
--- Beim allerersten Start nach der Umstellung werden die alten, hart im
--- Script hinterlegten Daten aus `db_seed.lua` automatisch einmalig in die
--- Datenbank importiert (siehe server.lua). Diese Datei ist danach nicht
--- mehr relevant für den laufenden Betrieb und kann gelöscht werden.
+-- Beim allerersten Start (einmalig, mit DB-Flag) können Legacy-Daten aus
+-- `db_seed.lua` importiert werden. Bei jedem normalen Resource-Restart wird
+-- die Datenbank nur gelesen – es wird nichts aus db_seed.lua nachgeladen.

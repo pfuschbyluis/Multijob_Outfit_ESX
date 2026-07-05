@@ -34,6 +34,7 @@ local ADMIN_FIELD_TYPES = {
 local function ApplyClientSettings(settings)
     if type(settings) ~= 'table' then return end
 
+    local hadSync = JobOutfit.State.settingsSynced == true
     local pedsChanged = settings.JobPeds ~= nil or settings.PedSettings ~= nil
         or settings.AllowedJobs ~= nil
         or (settings.Interaction ~= nil and settings.Interaction ~= Config.Interaction)
@@ -53,7 +54,8 @@ local function ApplyClientSettings(settings)
         JobOutfit.State.debugEnabled = nil
     end
 
-    if pedsChanged then
+    -- Erster Sync nach Resource-Start: nur Config setzen, Spawn macht peds.lua.
+    if pedsChanged and hadSync then
         JobOutfit.Peds.DeleteAll()
         JobOutfit.Peds.SpawnAll()
     end
@@ -61,6 +63,7 @@ end
 
 RegisterNetEvent('job_outfit:admin:sync', function(settings)
     ApplyClientSettings(settings)
+    JobOutfit.State.settingsSynced = true
 end)
 
 RegisterNetEvent('job_outfit:admin:denied', function()
