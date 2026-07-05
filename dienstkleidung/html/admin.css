@@ -648,6 +648,13 @@
     white-space: nowrap;
 }
 
+.outfit-row__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
 /* ─── Outfit editor ──────────────────────────────────────── */
 .outfit-editor-cols {
     display: grid;

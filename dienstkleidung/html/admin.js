@@ -680,10 +680,23 @@
         </div>`;
     }
 
+    function cloneOutfitForCopy(outfit) {
+        const copy = JSON.parse(JSON.stringify(outfit));
+        delete copy.id;
+        const baseLabel = String(copy.label || 'Outfit').trim() || 'Outfit';
+        copy.label = baseLabel.endsWith('(Kopie)') ? `${baseLabel} 2` : `${baseLabel} (Kopie)`;
+        copy.copyOf = outfit.id || true;
+        return copy;
+    }
+
     function outfitEditor(outfit) {
+        const editorTitle = outfit.id
+            ? 'Outfit bearbeiten'
+            : (outfit.copyOf ? 'Outfit kopieren' : 'Neues Outfit');
+
         return wrapTab(`
         <div class="admin-section">
-            <div class="admin-section__title">${outfit.id ? 'Outfit bearbeiten' : 'Neues Outfit'} — ${escapeAttr(jobLabel(outfitsUi.selectedJob))}</div>
+            <div class="admin-section__title">${editorTitle} — ${escapeAttr(jobLabel(outfitsUi.selectedJob))}</div>
             <div class="admin-grid">
                 <div class="field"><label>Rang (Grade-Nummer)</label><input type="number" data-outfit-field="grade" value="${outfit.grade}"></div>
                 <div class="field span-2"><label>Bezeichnung</label><input type="text" data-outfit-field="label" value="${escapeAttr(outfit.label)}"></div>
@@ -723,7 +736,10 @@
                     <div class="outfit-row">
                         <span class="outfit-row__grade">Rang ${escapeAttr(o.grade)}</span>
                         <span class="outfit-row__label">${escapeAttr(o.label)}</span>
-                        <button type="button" class="btn btn--sm" data-edit-outfit="${o.id}">Bearbeiten</button>
+                        <div class="outfit-row__actions">
+                            <button type="button" class="btn btn--sm" data-copy-outfit="${o.id}" title="Als neues Outfit duplizieren">Kopieren</button>
+                            <button type="button" class="btn btn--sm" data-edit-outfit="${o.id}">Bearbeiten</button>
+                        </div>
                     </div>`).join('')
                 : '<div class="empty-state">Noch keine Outfits für diesen Job.</div>');
 
@@ -732,7 +748,7 @@
             <div class="admin-section__title">Outfit-Liste</div>
             <div class="info-banner">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                <span>Outfits werden pro Job und Rang verwaltet. Der Rang muss mit dem tatsächlichen ESX-Job-Grade des Spielers übereinstimmen. Änderungen speicherst du direkt im Editor.</span>
+                <span>Outfits werden pro Job und Rang verwaltet. Mit <strong>Kopieren</strong> duplizierst du ein bestehendes Outfit als neues – Rang und Bezeichnung kannst du danach im Editor anpassen.</span>
             </div>
             <div class="admin-grid admin-grid--single">
                 <div class="field">
@@ -1004,6 +1020,16 @@
             const found = outfitsUi.list.find(o => String(o.id) === String(editOutfitId));
             if (found) {
                 outfitsUi.editing = JSON.parse(JSON.stringify(found));
+                render();
+            }
+            return;
+        }
+
+        const copyOutfitId = e.target.getAttribute && e.target.getAttribute('data-copy-outfit');
+        if (copyOutfitId) {
+            const found = outfitsUi.list.find(o => String(o.id) === String(copyOutfitId));
+            if (found) {
+                outfitsUi.editing = cloneOutfitForCopy(found);
                 render();
             }
             return;
