@@ -831,16 +831,29 @@
     flex-shrink: 0;
     width: 20px;
     height: 20px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    font-size: 12px;
-    font-weight: 800;
-    color: #06080f;
-    background: transparent;
 }
-.mode-option.is-active .mode-option__check {
+
+.mode-option__badge {
+    flex-shrink: 0;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 99px;
     background: var(--accent);
+    color: #06080f;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.mode-option__badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
 }
 
 .section-count {

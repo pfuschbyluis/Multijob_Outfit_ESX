@@ -221,6 +221,19 @@
         return !!(s && s.PedSettings && s.PedSettings.displayMode === 'markers');
     }
 
+    // Einheitliche Begriffe je nach Modus. `variant`:
+    //   'one'   -> "Marker" / "Outfit-Ped"
+    //   'many'  -> "Marker" / "Outfit-Peds"
+    //   'thing' -> "der Marker" / "der NPC" (für Sätze)
+    function modeTerm(s, variant) {
+        const marker = isMarkerMode(s);
+        switch (variant) {
+            case 'many': return marker ? 'Marker' : 'Outfit-Peds';
+            case 'thing': return marker ? 'der Marker' : 'der NPC';
+            default: return marker ? 'Marker' : 'Outfit-Ped';
+        }
+    }
+
     function pedToggleControl(key, ped, s) {
         const safeKey = escapeAttr(key);
         const enabled = isPedEnabled(ped);
@@ -479,7 +492,7 @@
         const pedKeys = Object.keys(s.JobPeds || {});
         const pedsHtml = pedKeys.length
             ? pedKeys.map(k => pedCard(k, s.JobPeds[k], s)).join('')
-            : `<div class="empty-state">${markerMode ? 'Noch keine Marker-Positionen konfiguriert.' : 'Noch keine Outfit-Peds konfiguriert.'}</div>`;
+            : `<div class="empty-state">Noch keine ${modeTerm(s, 'many')}-Standorte angelegt.</div>`;
 
         const availableForAdd = jobKeys.filter(k => !pedKeys.includes(k));
         const addRow = availableForAdd.length ? `
@@ -490,7 +503,7 @@
                     availableForAdd.includes(pendingAddPedJob) ? pendingAddPedJob : availableForAdd[0],
                     availableForAdd.map(capitalize)
                 )}
-                <button type="button" class="btn" id="addPedBtn">${markerMode ? '+ Marker hinzufügen' : '+ Ped hinzufügen'}</button>
+                <button type="button" class="btn" id="addPedBtn">+ ${modeTerm(s, 'one')}-Standort hinzufügen</button>
             </div>` : '';
 
         const pedBehaviorSection = markerMode ? '' : `
@@ -519,23 +532,24 @@
         const pedIcon = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
         const markerIcon = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg>';
 
+        const activePill = '<span class="mode-option__badge">Aktiv</span>';
         const modeSwitch = `
         <div class="mode-switch">
             <button type="button" class="mode-option ${!markerMode ? 'is-active' : ''}" data-set-mode="peds">
                 <span class="mode-option__icon">${pedIcon}</span>
                 <span class="mode-option__text">
                     <span class="mode-option__title">Outfit-Peds (NPCs)</span>
-                    <span class="mode-option__desc">Es werden echte NPCs an den Positionen gespawnt.</span>
+                    <span class="mode-option__desc">Es werden echte NPCs an den Standorten gespawnt.</span>
                 </span>
-                <span class="mode-option__check">${!markerMode ? '&#10003;' : ''}</span>
+                ${!markerMode ? activePill : '<span class="mode-option__check"></span>'}
             </button>
             <button type="button" class="mode-option ${markerMode ? 'is-active' : ''}" data-set-mode="markers">
                 <span class="mode-option__icon">${markerIcon}</span>
                 <span class="mode-option__text">
                     <span class="mode-option__title">Marker (ohne NPCs)</span>
-                    <span class="mode-option__desc">Statt NPCs erscheint ein Boden-Marker an den Positionen.</span>
+                    <span class="mode-option__desc">Statt NPCs erscheint ein Boden-Marker an den Standorten.</span>
                 </span>
-                <span class="mode-option__check">${markerMode ? '&#10003;' : ''}</span>
+                ${markerMode ? activePill : '<span class="mode-option__check"></span>'}
             </button>
         </div>`;
 
@@ -546,14 +560,12 @@
         return wrapTab(`
         <div class="admin-section">
             <div class="admin-section__title">Anzeige in der Welt</div>
-            <p class="help-text">Entweder Outfit-NPCs <strong>oder</strong> Marker an den Positionen – niemals beides gleichzeitig.</p>
+            <p class="help-text">Wähle, was an den Standorten erscheint: entweder <strong>Outfit-Peds (NPCs)</strong> oder <strong>Marker</strong> – niemals beides gleichzeitig.</p>
             ${modeSwitch}
         </div>
         <div class="admin-section">
             <div class="admin-section__title">${markerMode ? 'Marker-Standorte' : 'Ped-Standorte'} ${countLabel}</div>
-            <p class="help-text">${markerMode
-                ? 'Füge pro Job eine Position hinzu, übernimm deine aktuelle Position und aktiviere/deaktiviere sie einzeln.'
-                : 'Füge pro Job einen NPC hinzu, lege Model und Position fest und aktiviere/deaktiviere ihn einzeln.'}</p>
+            <p class="help-text">Lege pro Job einen Standort an, übernimm deine aktuelle Position und aktiviere bzw. deaktiviere ihn einzeln.</p>
             ${pedsHtml}
             ${addRow}
         </div>
