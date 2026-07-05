@@ -72,7 +72,7 @@
         },
         interaction: {
             title: 'Interaktion',
-            desc: 'Bestimme, ob Spieler per Taste oder ox_target mit Outfit-Peds interagieren.'
+            desc: 'Key, ox_lib TextUI oder ox_target – wie Spieler mit Peds/Markern interagieren.'
         }
     };
 
@@ -236,10 +236,9 @@
         return !!(s && s.PedSettings && s.PedSettings.displayMode === 'markers');
     }
 
-    // Marker brauchen die Key-Interaktion (ox_lib Text-UI). Mit ox_target
-    // gäbe es nur eine unsichtbare Zielzone – das sieht in der Welt schlecht aus.
+    // Marker brauchen Key oder ox_lib Text-UI – nicht ox_target (unsichtbare Zone).
     function markerAllowed(s) {
-        return s && s.Interaction === 'key';
+        return s && (s.Interaction === 'key' || s.Interaction === 'ox_lib');
     }
 
     // Einheitliche Begriffe je nach Modus. `variant`:
@@ -545,8 +544,10 @@
         const usesTarget = s.Interaction === 'ox_target';
         const infoSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
         const interactionInfo = usesTarget
-            ? `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>ox_target</strong>: An jedem Marker wird automatisch eine unsichtbare Ziel-Zone erstellt. Für Marker empfohlen: unter <strong>Interaktion</strong> auf <strong>Key</strong> umstellen.</span></div>`
-            : `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>Key</strong>: Spieler öffnen das Menü mit der eingestellten Taste, sobald sie in der Nähe sind (ox_lib Text-UI).</span></div>`;
+            ? `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>ox_target</strong>. Für Marker empfohlen: unter <strong>Interaktion</strong> auf <strong>Key</strong> oder <strong>ox_lib TextUI</strong> umstellen.</span></div>`
+            : (s.Interaction === 'ox_lib'
+                ? `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>ox_lib TextUI</strong>: Spieler sehen den Prompt rechts und öffnen das Menü per Taste.</span></div>`
+                : `<div class="info-banner">${infoSvg}<span>Interaktion steht auf <strong>Key</strong>: 3D-Text am Ped/Marker und Menü öffnen per Taste.</span></div>`);
 
         const markerSettingsSection = markerMode ? `
         <div class="admin-section">
@@ -584,13 +585,13 @@
                 <span class="mode-option__text">
                     <span class="mode-option__title">Marker (ohne NPCs)</span>
                     <span class="mode-option__desc">${markerLocked
-                        ? 'Benötigt Key: erst unter „Interaktion“ auf „Key“ umstellen.'
-                        : 'Statt NPCs erscheint ein Boden-Marker mit Key-Prompt (ox_lib Text-UI) an den Standorten.'}</span>
+                        ? 'Benötigt Key oder ox_lib TextUI: erst unter „Interaktion“ umstellen.'
+                        : 'Statt NPCs erscheint ein Boden-Marker – Interaktion per Key oder ox_lib TextUI.'}</span>
                 </span>
                 ${markerMode ? activePill : `<span class="mode-option__check">${markerLocked ? lockSvg : ''}</span>`}
             </button>
         </div>
-        ${markerLocked ? `<div class="mode-warning">${lockSvg}<span>Marker funktionieren nur mit <strong>Key</strong>-Interaktion. Stelle zuerst unter <strong>Interaktion</strong> den Modus auf <strong>„Key“</strong> um – danach lässt sich der Marker-Modus aktivieren. Mit <strong>ox_target</strong> gäbe es nur eine unsichtbare Zielzone.</span></div>` : ''}`;
+        ${markerLocked ? `<div class="mode-warning">${lockSvg}<span>Marker funktionieren nur mit <strong>Key</strong> oder <strong>ox_lib TextUI</strong>. Stelle zuerst unter <strong>Interaktion</strong> um – mit <strong>ox_target</strong> gäbe es nur eine unsichtbare Zielzone.</span></div>` : ''}`;
 
         const countLabel = pedKeys.length
             ? `<span class="section-count">${pedKeys.length}</span>`
@@ -613,10 +614,15 @@
     }
 
     function renderInteraction(s) {
-        const keySection = s.Interaction === 'key' ? `
+        const usesKeyLike = s.Interaction === 'key' || s.Interaction === 'ox_lib';
+        const keyHelp = s.Interaction === 'ox_lib'
+            ? 'ox_lib Text-UI-Prompt (rechts am Bildschirm) + Taste zum Öffnen.'
+            : '3D-Text direkt am Ped/Marker + Taste zum Öffnen.';
+
+        const keySection = usesKeyLike ? `
         <div class="admin-section">
-            <div class="admin-section__title">Key-Interaktion</div>
-            <p class="help-text">Spieler sehen den Prompt (ox_lib Text-UI) ab der Sichtweite und können in Interaktions-Distanz mit der Taste das Menü öffnen.</p>
+            <div class="admin-section__title">${s.Interaction === 'ox_lib' ? 'ox_lib TextUI' : 'Key'}-Interaktion</div>
+            <p class="help-text help-text--compact">${keyHelp}</p>
             <div class="admin-grid admin-grid--narrow">
                 <div class="field"><label>Interaktions-Distanz</label><input type="number" step="0.1" data-path="KeyInteract.distance" value="${s.KeyInteract.distance}"></div>
                 <div class="field"><label>Sichtweite (Prompt)</label><input type="number" step="0.1" data-path="KeyInteract.drawDistance" value="${s.KeyInteract.drawDistance}"></div>
@@ -636,7 +642,7 @@
         const markerModeActive = isMarkerMode(s);
         const infoSvg2 = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
         const markerHint = markerModeActive
-            ? `<div class="info-banner">${infoSvg2}<span>Der Marker-Modus ist aktiv – dafür wird die <strong>Key</strong>-Interaktion benötigt. Ein Wechsel auf <strong>ox_target</strong> ist hier nicht möglich, solange Marker aktiv sind.</span></div>`
+            ? `<div class="info-banner">${infoSvg2}<span>Der Marker-Modus ist aktiv – dafür wird <strong>Key</strong> oder <strong>ox_lib TextUI</strong> benötigt. Ein Wechsel auf <strong>ox_target</strong> ist nicht möglich.</span></div>`
             : '';
 
         return wrapTab(`
@@ -646,7 +652,7 @@
             <div class="admin-grid admin-grid--single">
                 <div class="field">
                     <label>Modus</label>
-                    ${customSelect('Interaction', ['key', 'ox_target'], s.Interaction, ['Key', 'ox_target'])}
+                    ${customSelect('Interaction', ['key', 'ox_lib', 'ox_target'], s.Interaction, ['Key', 'ox_lib TextUI', 'ox_target'])}
                 </div>
             </div>
         </div>

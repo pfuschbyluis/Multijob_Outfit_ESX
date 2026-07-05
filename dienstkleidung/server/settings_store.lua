@@ -40,7 +40,7 @@ NS.ENUMS = {
         ['top-right'] = true, ['top-left'] = true, ['top-center'] = true,
         ['bottom-right'] = true, ['bottom-left'] = true, ['bottom-center'] = true
     },
-    Interaction = { key = true, ox_target = true },
+    Interaction = { key = true, ox_lib = true, ox_target = true },
     MenuType = { custom = true, ox_lib = true },
     ClothingSystem = { skinchanger = true, native = true }
 }

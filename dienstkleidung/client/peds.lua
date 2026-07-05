@@ -331,7 +331,8 @@ CreateThread(function()
     JobOutfit.Peds.SpawnAll()
 
     while true do
-        if Config.Interaction ~= 'key' then
+        local mode = Config.Interaction
+        if mode ~= 'key' and mode ~= 'ox_lib' then
             HideInteractTextUI()
             Wait(1000)
         else
@@ -382,7 +383,23 @@ CreateThread(function()
 
                 if nearestInfo then
                     sleep = 0
-                    ShowInteractTextUI(nearestInfo.label or 'Outfit-Menü öffnen')
+                    local promptLabel = nearestInfo.label or 'Outfit-Menü öffnen'
+
+                    if mode == 'ox_lib' then
+                        ShowInteractTextUI(promptLabel)
+                    else
+                        HideInteractTextUI()
+                        local drawCoords
+                        if nearestInfo.entity and DoesEntityExist(nearestInfo.entity) then
+                            drawCoords = GetEntityCoords(nearestInfo.entity)
+                        elseif nearestInfo.coords then
+                            drawCoords = vector3(nearestInfo.coords.x, nearestInfo.coords.y, nearestInfo.coords.z)
+                        end
+                        if drawCoords then
+                            DrawText3D(drawCoords, promptLabel)
+                        end
+                    end
+
                     if canInteract and IsControlJustReleased(0, interactKey) then
                         JobOutfit.Menu.Open(nearestInfo.job)
                     end

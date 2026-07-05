@@ -18,7 +18,7 @@ Config.NotifyDuration = 8000
 -- 'top-right', 'top-left', 'top-center', 'bottom-right', 'bottom-left', 'bottom-center'
 Config.NotifyPosition = 'top-right'
 
--- 'key' oder 'ox_target'
+-- 'key' = 3D-Text + Taste | 'ox_lib' = ox_lib Text-UI + Taste | 'ox_target' = Target-System
 Config.Interaction = 'ox_target'
 
 -- 'custom' = eigenes HTML/NUI-Menü
