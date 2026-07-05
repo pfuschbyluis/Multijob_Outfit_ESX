@@ -241,6 +241,13 @@
         return s && s.Interaction === 'ox_lib';
     }
 
+    // Marker + Key/ox_target ist ungültig – beim Rendern direkt auf ox_lib korrigieren.
+    function enforceMarkerInteractionRules(s) {
+        if (s && isMarkerMode(s) && s.Interaction !== 'ox_lib') {
+            s.Interaction = 'ox_lib';
+        }
+    }
+
     // Einheitliche Begriffe je nach Modus. `variant`:
     //   'one'   -> "Marker" / "Outfit-Ped"
     //   'many'  -> "Marker" / "Outfit-Peds"
@@ -315,10 +322,16 @@
     // Native <select>-Popups werden von FiveMs CEF teils komplett weiß/ungestylt
     // dargestellt (bekannte Einschränkung). Deshalb ein eigenes, voll gestyltes
     // Dropdown statt <select>/<option>.
-    function customSelect(path, options, current, labels) {
-        const opts = options.map((o, i) => `
-            <button type="button" class="xselect__option ${o === current ? 'is-selected' : ''}" data-select-value="${escapeAttr(o)}">${escapeAttr((labels && labels[i]) || o)}</button>
-        `).join('');
+    function customSelect(path, options, current, labels, disabledOptions) {
+        const disabledSet = new Set(disabledOptions || []);
+        const opts = options.map((o, i) => {
+            const isDisabled = disabledSet.has(o);
+            const disabledClass = isDisabled ? ' is-disabled' : '';
+            const disabledAttr = isDisabled ? ' disabled aria-disabled="true" title="Im Marker-Modus nicht verfügbar"' : '';
+            return `
+            <button type="button" class="xselect__option ${o === current ? 'is-selected' : ''}${disabledClass}" data-select-value="${escapeAttr(o)}"${disabledAttr}>${escapeAttr((labels && labels[i]) || o)}</button>
+        `;
+        }).join('');
         const currentIndex = options.indexOf(current);
         const currentLabel = currentIndex >= 0 && labels ? labels[currentIndex] : current;
         return `
@@ -614,6 +627,8 @@
     }
 
     function renderInteraction(s) {
+        enforceMarkerInteractionRules(s);
+
         const usesKeyLike = s.Interaction === 'key' || s.Interaction === 'ox_lib';
         const keyHelp = s.Interaction === 'ox_lib'
             ? 'ox_lib Text-UI-Prompt rechts am Bildschirm – kein 3D-Text über dem NPC. Menü per Taste öffnen.'
@@ -642,8 +657,9 @@
         const markerModeActive = isMarkerMode(s);
         const infoSvg2 = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
         const markerHint = markerModeActive
-            ? `<div class="info-banner">${infoSvg2}<span>Der Marker-Modus ist aktiv – dafür wird <strong>ox_lib TextUI</strong> benötigt. Ein Wechsel auf <strong>Key</strong> oder <strong>ox_target</strong> ist nicht möglich.</span></div>`
+            ? `<div class="info-banner">${infoSvg2}<span>Der Marker-Modus ist aktiv – nur <strong>ox_lib TextUI</strong> ist erlaubt. <strong>Key</strong> und <strong>ox_target</strong> sind im Dropdown gesperrt.</span></div>`
             : '';
+        const interactionDisabled = markerModeActive ? ['key', 'ox_target'] : [];
 
         return wrapTab(`
         <div class="admin-section">
@@ -652,7 +668,7 @@
             <div class="admin-grid admin-grid--single">
                 <div class="field">
                     <label>Modus</label>
-                    ${customSelect('Interaction', ['key', 'ox_lib', 'ox_target'], s.Interaction, ['Key (3D-Text am NPC)', 'ox_lib TextUI (Bildschirm)', 'ox_target'])}
+                    ${customSelect('Interaction', ['key', 'ox_lib', 'ox_target'], s.Interaction, ['Key (3D-Text am NPC)', 'ox_lib TextUI (Bildschirm)', 'ox_target'], interactionDisabled)}
                 </div>
             </div>
         </div>
@@ -915,6 +931,10 @@
 
         const optionBtn = e.target.closest('[data-select-value]');
         if (optionBtn) {
+            if (optionBtn.disabled || optionBtn.classList.contains('is-disabled')) {
+                return;
+            }
+
             const wrap = optionBtn.closest('.xselect');
             const path = wrap.dataset.selectPath;
             const value = optionBtn.dataset.selectValue;
@@ -967,6 +987,9 @@
             }
             if (state.PedSettings.displayMode !== mode) {
                 state.PedSettings.displayMode = mode;
+                if (mode === 'markers') {
+                    state.Interaction = 'ox_lib';
+                }
                 render();
             }
             return;
@@ -1286,6 +1309,7 @@
         delete state.PedSettings.showMarker;
         if (state.PedSettings.showBlip === undefined) state.PedSettings.showBlip = false;
         if (state.PedSettings.markerDrawDistance === undefined) state.PedSettings.markerDrawDistance = 30;
+        enforceMarkerInteractionRules(state);
         state.KeyInteract = state.KeyInteract || { distance: 2.5, drawDistance: 12.0, key: 38, onlyShowForAllowedJobs: true };
         state.Target = state.Target || { distance: 2.5, icon: 'fa-solid fa-shirt', label: 'Outfit-Menü öffnen' };
         state.NotifyPosition = state.NotifyPosition || 'top-right';
